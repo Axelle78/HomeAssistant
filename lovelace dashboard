@@ -1,0 +1,1474 @@
+custom_header:
+  compact_mode: true
+title: Maison
+views:
+  - theme: ''
+    title: ''
+    icon: mdi:monitor-dashboard
+    layout: {}
+    type: custom:horizontal-layout
+    badges: []
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: markdown
+            content: '<ha-icon icon="mdi:thermometer"></ha-icon> Températures '
+            card_mod:
+              style: |
+                ha-card {
+                  margin-bottom: -4px;    font-family: Arial Narrow, sans-serif;
+                  font-size: 20px;
+                  font-weight: 100;
+                  color : #E7E7E7;
+                  text-align: center;
+                  --mdc-icon-size: 20px;
+                  background: url('https://raw.githubusercontent.com/Axelle78/test/master/fond3.jpg');
+                  background-size: 100% 400px;
+                  border-radius: 10px;
+                }
+          - type: horizontal-stack
+            cards:
+              - animate: true
+                name: Salon
+                color_thresholds:
+                  - color: '#1bc6fd'
+                    value: 15
+                  - color: '#1bfd1b'
+                    value: 17
+                  - color: '#fdf31b'
+                    value: 19
+                  - color: '#fda41b'
+                    value: 25
+                  - color: '#fd331b'
+                    value: 30
+                entities:
+                  - sensor.netatmo_maison_indoor_temperature
+                labels: true
+                font_size: 60
+                line_color: green
+                points_per_hour: 6
+                height: 60
+                show:
+                  labels: true
+                style: |
+                  ha-card {
+                    margin-bottom: -20px;
+                    border-radius: 0px;
+                    
+                  }
+                type: custom:mini-graph-card
+              - animate: true
+                name: Chambre
+                color_thresholds:
+                  - color: '#1bc6fd'
+                    value: 15
+                  - color: '#1bfd1b'
+                    value: 17
+                  - color: '#fdf31b'
+                    value: 19
+                  - color: '#fda41b'
+                    value: 25
+                  - color: '#fd331b'
+                    value: 30
+                entities:
+                  - sensor.ble_temperature_temperature_chambre
+                labels: true
+                font_size: 60
+                line_color: green
+                points_per_hour: 6
+                height: 60
+                show:
+                  labels: true
+                style: |
+                  ha-card {
+                    margin-bottom: -4px;
+                    border-radius: 10px;
+                    
+                  }
+                type: custom:mini-graph-card
+          - type: horizontal-stack
+            cards:
+              - animate: true
+                name: Lucie
+                color_thresholds:
+                  - color: '#1bc6fd'
+                    value: 15
+                  - color: '#1bfd1b'
+                    value: 17
+                  - color: '#fdf31b'
+                    value: 19
+                  - color: '#fda41b'
+                    value: 25
+                  - color: '#fd331b'
+                    value: 30
+                entities:
+                  - sensor.ble_temperature_temperature_chambre_de_lucie
+                labels: true
+                font_size: 60
+                line_color: green
+                points_per_hour: 6
+                height: 60
+                show:
+                  labels: true
+                style: |
+                  ha-card {
+                    margin-bottom: -20px;
+                    border-radius: 0px;
+                    
+                  }
+                type: custom:mini-graph-card
+              - animate: true
+                name: Chloé
+                color_thresholds:
+                  - color: '#1bc6fd'
+                    value: 15
+                  - color: '#1bfd1b'
+                    value: 17
+                  - color: '#fdf31b'
+                    value: 19
+                  - color: '#fda41b'
+                    value: 25
+                  - color: '#fd331b'
+                    value: 30
+                entities:
+                  - sensor.ble_temperature_temperature_chambre_chloe
+                labels: true
+                font_size: 60
+                line_color: green
+                points_per_hour: 6
+                height: 60
+                show:
+                  labels: true
+                style: |
+                  ha-card {
+                    margin-bottom: -4px;
+                    border-radius: 10px;
+                    
+                  }
+                type: custom:mini-graph-card
+          - animate: true
+            name: Température extérieure
+            color_thresholds:
+              - color: '#1bc6fd'
+                value: 5
+              - color: '#1bfd1b'
+                value: 15
+              - color: '#fdf31b'
+                value: 20
+              - color: '#fda41b'
+                value: 25
+              - color: '#fd331b'
+                value: 30
+            entities:
+              - sensor.netatmo_maison_indoor_exterieur_temperature
+            labels: true
+            font_size: 60
+            line_color: green
+            points_per_hour: 6
+            height: 55
+            show:
+              labels: true
+            style: |
+              ha-card {
+                margin-bottom: -4px;
+                border-radius: 10px;
+                
+              }
+            type: custom:mini-graph-card
+          - type: markdown
+            content: '<ha-icon icon="mdi:weather-partly-rainy"></ha-icon> Météo '
+            card_mod:
+              style: |
+                ha-card {
+                  margin-bottom: -4px;
+                  font-family: Arial Narrow, sans-serif;
+                  font-size: 20px;
+                  font-weight: 100;
+                  color : #E7E7E7;
+                  text-align: center;
+                  --mdc-icon-size: 20px;
+                  background: url('https://raw.githubusercontent.com/Axelle78/test/master/fond3.jpg');
+                  background-size: 100% 400px;
+                  border-radius: 10px;
+                  
+                }
+          - type: custom:weather-card
+            entity: weather.mantes_la_jolie
+            hourly_forecast: false
+      - type: vertical-stack
+        cards:
+          - type: markdown
+            content: <ha-icon icon="mdi:account-check"></ha-icon> Présences
+            card_mod:
+              style: |
+                ha-card {
+                  margin-bottom : -4px;
+                  font-family: Arial Narrow, sans-serif;
+                  font-size: 20px;
+                  font-weight: 100;
+                  color : #E7E7E7;
+                  text-align: center;
+                  --mdc-icon-size: 20px;
+                  background: url('https://raw.githubusercontent.com/Axelle78/test/master/fond3.jpg');
+                  background-size: 100% 400px;
+                  border-radius:10px;
+                }
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-person-card
+                entity: person.axelle
+                layout: vertical
+                secondary_info: state
+                icon_type: entity-picture
+                card_mod:
+                  style:
+                    mushroom-card: |
+                      :host {
+                        --mush-icon-size: 75px;       
+                        } 
+              - type: custom:mushroom-person-card
+                entity: person.richard
+                layout: vertical
+                fill_container: true
+                icon_type: entity-picture
+                card_mod:
+                  style:
+                    mushroom-card: |
+                      :host {
+                        --mush-icon-size: 75px;       
+                        } 
+              - type: custom:mushroom-person-card
+                entity: person.chloe
+                layout: vertical
+                icon_type: entity-picture
+                card_mod:
+                  style:
+                    mushroom-card: |
+                      :host {
+                        --mush-icon-size: 75px;       
+                        } 
+              - type: custom:mushroom-person-card
+                entity: person.lucie
+                layout: vertical
+                icon_type: entity-picture
+                card_mod:
+                  style:
+                    mushroom-card: |
+                      :host {
+                        --mush-icon-size: 75px;       
+                        } 
+          - type: markdown
+            content: '<ha-icon icon="mdi:lightbulb-on"></ha-icon> Lumières '
+            card_mod:
+              style: |
+                ha-card {
+                  margin-bottom : -4px;
+                  font-family: Arial Narrow, sans-serif;
+                  font-size: 20px;
+                  font-weight: 100;
+                  color : #E7E7E7;
+                  text-align: center;
+                  --mdc-icon-size: 20px;
+                  background: url('https://raw.githubusercontent.com/Axelle78/test/master/fond3.jpg');
+                  background-size: 100% 400px;
+                  border-radius:10px;
+                }
+          - cards:
+              - type: custom:button-card
+                entity: light.hue_white_candle_1
+                name: Salon
+                color: auto
+                size: 12%
+                show_name: true
+                show_label: true
+                label_template: >
+                  var bri = Math.round(entity.attributes.brightness / 2.55);
+                  return (bri ? bri : '0') + '%';
+                tap_action:
+                  action: toggle
+                state:
+                  - value: 'on'
+                    icon: mdi:lightbulb-on
+                    color: rgba(255,252,158)
+                    styles:
+                      card:
+                        - '--paper-card-background-color': rgba(40, 40, 40)
+                        - box-shadow: 0px 0px 10px 3px rgba(255,252,158)
+                  - value: 'off'
+                    styles:
+                      label:
+                        - color: rgba(0, 0, 0, 0.0)
+                hold_action:
+                  action: more-info
+                style: |
+                  ha-card {
+                    margin-bottom: -4px;
+                    border-radius: 10px;
+                    
+                  }
+              - type: custom:button-card
+                entity: light.halogene
+                name: Halogène
+                color: auto
+                size: 12%
+                show_name: true
+                show_label: true
+                label_template: >
+                  var bri = Math.round(entity.attributes.brightness / 2.55);
+                  return (bri ? bri : '0') + '%';
+                tap_action:
+                  action: toggle
+                state:
+                  - value: 'on'
+                    icon: mdi:lightbulb-on
+                    color: rgba(255,252,158)
+                    styles:
+                      card:
+                        - '--paper-card-background-color': rgba(40, 40, 40)
+                        - box-shadow: 0px 0px 10px 3px rgba(255,252,158)
+                  - value: 'off'
+                    styles:
+                      label:
+                        - color: rgba(0, 0, 0, 0.0)
+                hold_action:
+                  action: more-info
+                style: |
+                  ha-card {
+                    margin-bottom: -4px;
+                    border-radius: 10px;
+                    
+                  }
+              - type: custom:button-card
+                entity: light.hue_white_lamp_1
+                name: Lucie
+                color: auto
+                size: 12%
+                show_name: true
+                show_label: true
+                state:
+                  - value: 'on'
+                    icon: mdi:lightbulb-on
+                    color: rgba(255,252,158)
+                    styles:
+                      card:
+                        - box-shadow: 0px 0px 10px 3px rgba(255,252,158)
+                  - value: 'off'
+                    styles:
+                      label:
+                        - color: rgba(0, 0, 0, 0.0)
+                style: |
+                  ha-card {
+                    margin-bottom: -4px;
+                    border-radius: 10px;
+                    
+                  }
+            type: horizontal-stack
+          - type: markdown
+            content: '<ha-icon icon="mdi:gesture-tap"></ha-icon> Actions Alexa '
+            card_mod:
+              style: |
+                ha-card {
+                  font-family: Arial Narrow, sans-serif;
+                  font-size: 20px;
+                  font-weight: 100;
+                  color : #E7E7E7;
+                  text-align: center;
+                  --mdc-icon-size: 20px;
+                  background: url('https://raw.githubusercontent.com/Axelle78/test/master/fond3.jpg');
+                  background-size: 100% 400px;
+                  margin-bottom:-4px;
+                  border-radius: 10px;
+                }
+          - type: horizontal-stack
+            cards:
+              - type: custom:button-card
+                tap_action:
+                  action: call-service
+                  service: script.la_table
+                entity: script.la_table
+                size: 20%
+                style: |
+                  ha-card {
+                    margin-bottom: -4px;
+                    border-radius: 10px;
+                    
+                  }
+              - type: custom:button-card
+                tap_action:
+                  action: call-service
+                  service: script.lave_vaisselle
+                entity: script.lave_vaisselle
+                size: 20%
+                style: |
+                  ha-card {
+                    margin-bottom: -4px;
+                    border-radius: 10px;
+                    
+                  }
+              - type: custom:button-card
+                tap_action:
+                  action: call-service
+                  service: script.1611826806282
+                entity: script.1611826806282
+                size: 20%
+                style: |
+                  ha-card {
+                    margin-bottom: -4px;
+                    border-radius: 10px;
+                    
+                  }
+          - type: markdown
+            content: '<ha-icon icon="mdi:stove"></ha-icon> Four '
+            card_mod:
+              style: |
+                ha-card {
+                  margin-bottom: -4px;
+                  font-family: Arial Narrow, sans-serif;
+                  font-size: 20px;
+                  font-weight: 100;
+                  color : #E7E7E7;
+                  text-align: center;
+                  --mdc-icon-size: 20px;
+                  background: url('https://raw.githubusercontent.com/Axelle78/test/master/fond3.jpg');
+                  background-size: 100% 400px;
+                  border-radius:10px;
+                }
+          - type: horizontal-stack
+            cards:
+              - type: entity
+                entity: sensor.four_temperature_measurement
+                name: T° actuelle
+                state_color: false
+              - type: entity
+                entity: sensor.four_oven_set_point
+                icon: mdi:temperature-celsius
+                name: T° choisie
+              - type: entity
+                entity: sensor.four_oven_job_state
+                name: Etat
+          - type: markdown
+            content: '<ha-icon icon="mdi:radiator"></ha-icon> Chauffage '
+            card_mod:
+              style: |
+                ha-card {
+                  font-family: Arial Narrow, sans-serif;
+                  font-size: 20px;
+                  font-weight: 100;
+                  color : #E7E7E7;
+                  text-align: center;
+                  --mdc-icon-size: 20px;
+                  background: url('https://raw.githubusercontent.com/Axelle78/test/master/fond3.jpg');
+                  background-size: 100% 400px;
+                  margin-bottom:-4px;
+                  border-radius: 10px;
+                }
+          - type: horizontal-stack
+            cards:
+              - type: conditional
+                conditions:
+                  - condition: state
+                    entity: input_number.chauffage
+                    state: '1.0'
+                card:
+                  type: markdown
+                  content: Mode Chauffage <br/><br/>PRESENT
+                  card_mod:
+                    style: |
+                      ha-card {
+                       margin-bottom: -10px;
+                       font-size: 16px;
+                       color : #E7E7E7;
+                       text-align: center;
+                       --mdc-icon-size: 15px;
+                       background-size: 100% 400px;
+                       border-radius:10px;
+                       box-shadow: 0px 0px 10px 3px rgba(255,252,158)
+                      }
+              - type: conditional
+                conditions:
+                  - condition: state
+                    entity: input_number.chauffage
+                    state: '0.0'
+                card:
+                  type: markdown
+                  content: Mode Chauffage <br/><br/>ABSENT
+                  card_mod:
+                    style: |
+                      ha-card {
+                       margin-bottom: -10px;
+                       font-size: 16px;
+                       color : #E7E7E7;
+                       text-align: center;
+                       --mdc-icon-size: 15px;
+                       background-size: 100% 400px;
+                       border-radius:10px;
+                       box-shadow: 0px 0px 10px 3px rgba(50,130,246)
+                      }
+              - type: conditional
+                conditions:
+                  - condition: state
+                    entity: input_number.chauffage
+                    state: '2.0'
+                card:
+                  type: markdown
+                  content: Mode Chauffage <br/><br/>PRESENT+
+                  card_mod:
+                    style: |
+                      ha-card {
+                       margin-bottom: -10px;
+                       font-size: 16px;
+                       color : #E7E7E7;
+                       text-align: center;
+                       --mdc-icon-size: 15px;
+                       background-size: 100% 400px;
+                       border-radius:10px;
+                       box-shadow: 0px 0px 10px 3px rgba(246,47,8)
+                      }
+          - type: horizontal-stack
+            cards:
+              - show_name: true
+                show_icon: true
+                type: button
+                tap_action:
+                  action: toggle
+                entity: script.1705141586352
+                name: Activer PRESENT +
+                icon_height: 30px
+              - show_name: true
+                show_icon: true
+                type: button
+                tap_action:
+                  action: toggle
+                entity: script.1643124363987
+                name: Activer PRESENT
+                icon_height: 30px
+                card_mod:
+                  style: |
+                    ha-card > span {
+                      font-size: 15px;
+                    }
+              - show_name: true
+                show_icon: true
+                type: button
+                tap_action:
+                  action: toggle
+                entity: script.1643124552897
+                name: Activer ABSENT
+                icon_height: 30px
+                card_mod:
+                  style: |
+                    ha-card > span {
+                      font-size: 15px;
+                    }
+      - type: vertical-stack
+        cards:
+          - type: custom:simple-clock-card
+            use_military: true
+            hide_seconds: false
+            font_size: 4rem
+            paddingLeft_size: 40px
+            paddingRight_size: 40px
+            paddingTop_size: 40px
+            paddingBottom_size: 40px
+          - type: markdown
+            content: >-
+              <ha-icon icon="mdi:solar-power-variant-outline"></ha-icon>
+              Panneaux solaires 
+            card_mod:
+              style: |
+                ha-card {
+                  margin-bottom: -4px;
+                  font-family: Arial Narrow, sans-serif;
+                  font-size: 20px;
+                  font-weight: 100;
+                  color : #E7E7E7;
+                  text-align: center;
+                  --mdc-icon-size: 20px;
+                  background: url('https://raw.githubusercontent.com/Axelle78/test/master/fond3.jpg');
+                  background-size: 100% 400px;
+                  border-radius:10px;
+                }
+          - type: custom:power-distribution-card
+            title: Consommation courante
+            entities:
+              - decimals: '0'
+                display_abs: true
+                name: solar
+                unit_of_display: W
+                icon: mdi:solar-power
+                producer: true
+                entity: sensor.envoy_122250004672_current_power_production
+                preset: solar
+                icon_color:
+                  bigger: green
+                  equal: gray
+                  smaller: red
+              - decimals: '0'
+                display_abs: true
+                name: Export
+                unit_of_display: W
+                icon: mdi:lightning-bolt-outline
+                producer: true
+                entity: sensor.energy_exporting
+                preset: producer
+                icon_color:
+                  bigger: green
+                  equal: gray
+                  smaller: red
+                calc_excluded: true
+              - decimals: '0'
+                display_abs: true
+                name: conso
+                unit_of_display: W
+                consumer: true
+                icon: mdi:home
+                entity: sensor.envoy_122250004672_current_power_consumption
+                preset: consumer
+                icon_color:
+                  bigger: red
+                  equal: green
+                  smaller: red
+                invert_value: true
+              - decimals: '0'
+                display_abs: true
+                name: Import
+                unit_of_display: W
+                icon: mdi:transmission-tower
+                entity: sensor.energy_importing
+                preset: grid
+                icon_color:
+                  bigger: red
+                  equal: gray
+                  smaller: red
+                invert_value: true
+            center:
+              type: bars
+              content:
+                - preset: ratio
+                  name: use
+                  bar_color: green
+                  bar_bg_color: ''
+                  entity: ''
+                  invert_value: false
+                - preset: autarky
+                  name: indep
+                  bar_color: blue
+            animation: flash
+          - type: custom:power-distribution-card
+            title: Consommation Journée
+            entities:
+              - decimals: '1'
+                display_abs: true
+                name: solar
+                unit_of_display: kWh
+                icon: mdi:solar-power
+                producer: true
+                entity: sensor.envoy_122250004672_today_s_energy_production
+                preset: solar
+                icon_color:
+                  bigger: green
+                  equal: gray
+                  smaller: red
+                invert_value: false
+                hide_arrows: true
+              - decimals: '1'
+                display_abs: true
+                name: Export
+                unit_of_display: kWh
+                icon: mdi:lightning-bolt-outline
+                producer: true
+                entity: sensor.daily_energy_export
+                preset: producer
+                icon_color:
+                  bigger: green
+                  equal: gray
+                  smaller: red
+                calc_excluded: true
+                invert_value: false
+                hide_arrows: true
+              - decimals: '1'
+                display_abs: true
+                name: conso
+                unit_of_display: kWh
+                consumer: true
+                icon: mdi:home
+                entity: sensor.envoy_122250004672_today_s_energy_consumption
+                preset: consumer
+                icon_color:
+                  bigger: red
+                  equal: green
+                  smaller: red
+                invert_value: true
+                hide_arrows: true
+              - decimals: '1'
+                display_abs: true
+                name: Import
+                unit_of_display: kWh
+                icon: mdi:transmission-tower
+                entity: sensor.daily_energy_import
+                preset: grid
+                icon_color:
+                  bigger: red
+                  equal: gray
+                  smaller: green
+                invert_value: true
+                hide_arrows: true
+            center:
+              type: bars
+              content:
+                - preset: ratio
+                  name: use
+                  bar_color: green
+                  bar_bg_color: ''
+                  entity: ''
+                  invert_value: false
+                - preset: autarky
+                  name: indep
+                  bar_color: yellow
+            animation: flash
+          - type: custom:apexcharts-card
+            graph_span: 7d
+            span:
+              end: day
+            header:
+              title: Historique sur 7 jours
+              show: true
+              show_states: true
+              colorize_states: true
+            apex_config:
+              legend:
+                show: false
+              chart:
+                height: 200px
+            series:
+              - entity: sensor.envoy_122250004672_today_s_energy_consumption
+                name: Consommation Electricité
+                transform: return x / 1000;
+                unit: kWh
+                type: column
+                group_by:
+                  func: last
+                  duration: 1d
+              - entity: sensor.daily_energy_import
+                name: Import Electricité
+                min: 0
+                group_by:
+                  func: last
+                  duration: 1d
+              - entity: sensor.envoy_122250004672_today_s_energy_production
+                unit: kWh
+                transform: return x / 1000;
+                min: 0
+                name: Production Electricité
+                group_by:
+                  func: last
+                  duration: 1d
+            yaxis:
+              - min: 0
+      - type: vertical-stack
+        cards:
+          - type: markdown
+            content: '<ha-icon icon="mdi:home-lightning-bolt"></ha-icon> Tempo EDF '
+            card_mod:
+              style: |
+                ha-card {
+                  margin-bottom : -4px;
+                  font-family: Arial Narrow, sans-serif;
+                  font-size: 20px;
+                  font-weight: 100;
+                  color : #E7E7E7;
+                  text-align: center;
+                  --mdc-icon-size: 20px;
+                  background: url('https://raw.githubusercontent.com/Axelle78/test/master/fond3.jpg');
+                  background-size: 100% 400px;
+                  border-radius:10px;
+                }
+          - type: horizontal-stack
+            cards:
+              - type: horizontal-stack
+                cards:
+                  - type: conditional
+                    conditions:
+                      - condition: state
+                        entity: sensor.rte_tempo_couleur_actuelle
+                        state: Rouge
+                    card:
+                      type: markdown
+                      content: >-
+                        Aujourd'hui  <br/> <img
+                        src="https://raw.githubusercontent.com/Axelle78/test/master/panneau.png"
+                        width=30% height=10% > <br/> {{
+                        (states('sensor.edf_tempo_prix_actuel')| float / 100
+                        )|round(3)}} €
+                      card_mod:
+                        style: |
+                          ha-markdown {
+                           padding: 10 0 -5 0 !important;
+                          }
+                          ha-card {
+                           margin-bottom: -4px;
+                           font-size: 16px;
+                           color : #E7E7E7;
+                           text-align: center;
+                           --mdc-icon-size: 20px;
+                           background: url('https://raw.githubusercontent.com/Axelle78/test/master/rouge.png');
+                           background-size: 100% 400px;
+                           border-radius:10px;
+                          }
+                  - type: conditional
+                    conditions:
+                      - condition: state
+                        entity: sensor.rte_tempo_couleur_actuelle
+                        state: Blanc
+                    card:
+                      type: markdown
+                      content: >-
+                        Aujourd'hui  <br/> <img
+                        src="https://raw.githubusercontent.com/Axelle78/test/master/OK.png"
+                        width=30% height=10% > <br/> {{
+                        (states('sensor.edf_tempo_prix_actuel')| float / 100
+                        )|round(3)}} €
+                      card_mod:
+                        style: |
+                          ha-markdown {
+                           padding: 10 0 -5 0 !important;
+                          }
+                          ha-card {
+                           margin-bottom: -10px;
+                           font-size: 16px;
+                           color : #000000;
+                           text-align: center;
+                           --mdc-icon-size: 20px;
+                           background: url('https://raw.githubusercontent.com/Axelle78/test/master/blanc.png');
+                           background-size: 100% 400px;
+                           border-radius:10px;
+                          }
+                  - type: conditional
+                    conditions:
+                      - condition: state
+                        entity: sensor.rte_tempo_couleur_actuelle
+                        state: Bleu
+                    card:
+                      type: markdown
+                      content: >-
+                        Aujourd'hui  <br/> <img
+                        src="https://raw.githubusercontent.com/Axelle78/test/master/OK.png"
+                        width=30% height=10% > <br/> {{
+                        (states('sensor.edf_tempo_prix_actuel')| float / 100
+                        )|round(3)}} €
+                      card_mod:
+                        style: |
+                          ha-markdown {
+                           padding: 10 0 -5 0 !important;
+                          }
+                          ha-card {
+                           margin-bottom: -10px;
+                           font-size: 16px;
+                           color : #E7E7E7;
+                           text-align: center;
+                           --mdc-icon-size: 20px;
+                           background: url('https://raw.githubusercontent.com/Axelle78/test/master/bleu.png');
+                           background-size: 100% 400px;
+                           border-radius:10px;
+                          }
+                  - type: conditional
+                    conditions:
+                      - condition: state
+                        entity: sensor.rte_tempo_couleur_actuelle
+                        state: inconnu
+                    card:
+                      type: markdown
+                      content: >-
+                        Aujourd'hui  <br/> <img
+                        src="https://raw.githubusercontent.com/Axelle78/test/master/interrog.png"
+                        width=30% height=10% > <br/> {{
+                        (states('sensor.edf_tempo_prix_actuel')| float / 100
+                        )|round(3)}} €
+                      card_mod:
+                        style: |
+                          ha-markdown {
+                           padding: 10 0 -5 0 !important;
+                          }
+                          ha-card {
+                           margin-bottom: -10px;
+                           font-size: 16px;
+                           color : #E7E7E7;
+                           text-align: center;
+                           --mdc-icon-size: 20px;
+                           background-size: 100% 400px;
+                           border-radius:10px;
+                          }
+              - type: horizontal-stack
+                cards:
+                  - type: conditional
+                    conditions:
+                      - condition: state
+                        entity: sensor.rte_tempo_prochaine_couleur
+                        state: Rouge
+                    card:
+                      type: markdown
+                      content: >-
+                        Demain  <br/> <img
+                        src="https://raw.githubusercontent.com/Axelle78/test/master/panneau.png"
+                        width=25% height=10% > <br/> HP  {{
+                        (states('input_number.tarif_edf_tempo_rouge_hp')| float
+                        / 1 )|round(3)}} € <br/> HC {{
+                        (states('input_number.tarif_edf_tempo_rouge_hc')| float
+                        / 1 )|round(3)}} €
+                      card_mod:
+                        style: |
+                          ha-markdown {
+                           padding: 10 0 -5 0 !important;
+                          }
+                          ha-card {
+                           margin-bottom: -10px;
+                           font-size: 16px;
+                           color : #E7E7E7;
+                           text-align: center;
+                           --mdc-icon-size: 20px;
+                           background: url('https://raw.githubusercontent.com/Axelle78/test/master/rouge.png');
+                           background-size: 100% 400px;
+                           border-radius:10px;
+                          }
+                  - type: conditional
+                    conditions:
+                      - condition: state
+                        entity: sensor.rte_tempo_prochaine_couleur
+                        state: Blanc
+                    card:
+                      type: markdown
+                      content: >-
+                        Demain  <br/> <img
+                        src="https://raw.githubusercontent.com/Axelle78/test/master/OK.png"
+                        width=25% height=10% > <br/> HP  {{
+                        (states('input_number.tarif_edf_tempo_blanc_hp')| float
+                        / 1 )|round(3)}} € <br/> HC {{
+                        (states('input_number.tarif_edf_tempo_blanc_hc')| float
+                        / 1 )|round(3)}} €
+                      card_mod:
+                        style: |
+                          ha-markdown {
+                           padding: 10 0 -5 0 !important;
+                          }
+                          ha-card {
+                           margin-bottom: -10px;
+                           font-size: 16px;
+                           color : #000000;
+                           text-align: center;
+                           --mdc-icon-size: 20px;
+                           background: url('https://raw.githubusercontent.com/Axelle78/test/master/blanc.png');
+                           background-size: 100% 400px;
+                           border-radius:10px;
+                          }
+                  - type: conditional
+                    conditions:
+                      - condition: state
+                        entity: sensor.rte_tempo_prochaine_couleur
+                        state: Bleu
+                    card:
+                      type: markdown
+                      content: >-
+                        Demain  <br/> <img
+                        src="https://raw.githubusercontent.com/Axelle78/test/master/OK.png"
+                        width=25% height=10% > <br/> HP  {{
+                        (states('input_number.tarif_edf_tempo_bleu_hp')| float /
+                        1 )|round(3)}} € <br/> HC {{
+                        (states('input_number.tarif_edf_tempo_bleu_hc')| float /
+                        1 )|round(3)}} €
+                      card_mod:
+                        style: |
+                          ha-markdown {
+                           padding: 10 0 -5 0 !important;
+                          }
+                          ha-card {
+                           margin-bottom: -10px;
+                           font-size: 16px;
+                           color : #E7E7E7;
+                           text-align: center;
+                           --mdc-icon-size: 20px;
+                           background: url('https://raw.githubusercontent.com/Axelle78/test/master/bleu.png');
+                           background-size: 100% 400px;
+                           border-radius:10px;
+                          }
+                  - type: conditional
+                    conditions:
+                      - condition: state
+                        entity: sensor.rte_tempo_prochaine_couleur
+                        state: inconnu
+                    card:
+                      type: markdown
+                      content: >-
+                        Demain  <br/> <img
+                        src="https://raw.githubusercontent.com/Axelle78/test/master/interrog.png"
+                        width=30% height=10% > <br/> 
+                      card_mod:
+                        style: |
+                          ha-card {
+                           margin-bottom: -10px;
+                           font-size: 16px;
+                           color : #000000;
+                           text-align: center;
+                           --mdc-icon-size: 20px;
+                           background-size: 100% 400px;
+                           border-radius:10px;
+                          }
+          - type: horizontal-stack
+            cards:
+              - type: markdown
+                content: >-
+                  <b>Rouge</b>  <br/> <br/>{{
+                  states('sensor.rte_tempo_cycle_jours_restants_rouge') }} / {{
+                  ( (states('sensor.rte_tempo_cycle_jours_restants_rouge') |
+                  float(default=0) ) +
+                  (states('sensor.rte_tempo_cycle_jours_deja_places_rouge') |
+                  float(default=0) ) ) | round(0) }}
+                     HP  {{
+                        (states('input_number.tarif_edf_tempo_rouge_hp')| float / 1
+                        )|round(3)}} € <br/> HC {{
+                        (states('input_number.tarif_edf_tempo_rouge_hc')| float / 1
+                        )|round(3)}} €
+                card_mod:
+                  style: |
+                    ha-card {
+                     margin-bottom: -10px;
+                     font-size: 16px;
+                     color : #000000;
+                     text-align: center;
+                     --mdc-icon-size: 18px;
+                     background: url('https://raw.githubusercontent.com/Axelle78/test/master/rouge.png');
+                     background-size: 100% 400px;
+                     border-radius:5px;
+                    }
+              - type: markdown
+                content: >-
+                  <b>Blanc</b>  <br/> <br/>{{
+                  states('sensor.rte_tempo_cycle_jours_restants_blanc') }} / {{
+                  ( (states('sensor.rte_tempo_cycle_jours_restants_blanc') |
+                  float(default=0) ) +
+                  (states('sensor.rte_tempo_cycle_jours_deja_places_blanc') |
+                  float(default=0) ) ) | round(0) }}
+                     HP  {{
+                        (states('input_number.tarif_edf_tempo_blanc_hp')| float / 1
+                        )|round(3)}} € <br/> HC {{
+                        (states('input_number.tarif_edf_tempo_blanc_hc')| float / 1
+                        )|round(3)}} €
+                card_mod:
+                  style: |
+                    ha-card {
+                     margin-bottom: -10px;
+                     font-size: 16px;
+                     color : #000000;
+                     text-align: center;
+                     --mdc-icon-size: 18px;
+                     background: url('https://raw.githubusercontent.com/Axelle78/test/master/blanc.png');
+                     background-size: 100% 400px;
+                     border-radius:5px;
+                    }
+              - type: markdown
+                content: >-
+                  <b>Bleu</b>  <br/> <br/>{{
+                  states('sensor.rte_tempo_cycle_jours_restants_bleu') }} / {{ (
+                  (states('sensor.rte_tempo_cycle_jours_restants_bleu') |
+                  float(default=0) ) +
+                  (states('sensor.rte_tempo_cycle_jours_deja_places_bleu') |
+                  float(default=0) ) ) | round(0) }}
+                     HP  {{
+                        (states('input_number.tarif_edf_tempo_bleu_hp')| float / 1
+                        )|round(3)}} € <br/> HC {{
+                        (states('input_number.tarif_edf_tempo_bleu_hc')| float / 1
+                        )|round(3)}} €
+                card_mod:
+                  style: |
+                    ha-card {
+                     margin-bottom: -10px;
+                     font-size: 16px;
+                     color : #E7E7E7;
+                     text-align: center;
+                     --mdc-icon-size: 18px;
+                     background: url('https://raw.githubusercontent.com/Axelle78/test/master/bleu.png');
+                     background-size: 100% 400px;
+                     border-radius:5px;
+                    }
+          - type: markdown
+            content: Données Ecojoko du jour
+            card_mod:
+              style: |
+                ha-card {
+                  margin-bottom : -4px;
+                  font-family: Arial Narrow, sans-serif;
+                  font-size: 18px;
+                  font-weight: 100;
+                  color : #E7E7E7;
+                  text-align: center;
+                  --mdc-icon-size: 20px;
+                  background: url('https://raw.githubusercontent.com/Axelle78/test/master/ecojoko.jpg');
+                  background-size: 100%;
+                  border-radius:10px;
+                }
+          - type: horizontal-stack
+            cards:
+              - type: horizontal-stack
+                cards:
+                  - type: conditional
+                    conditions:
+                      - condition: numeric_state
+                        entity: sensor.evol_cout_hier
+                        above: 0
+                    card:
+                      type: markdown
+                      content: >-
+                        <b>Coûts</b>
+
+                        <hr width="500" size="4" align=center color
+                        ="#00ff00"></hr>
+
+                         {{ (states('sensor.cout_tempo_jour_total')|float)|round(2)}}  € 
+                         {{ (states('sensor.evol_cout_hier')|float)|round(2)}} %  
+
+                         <img src="https://raw.githubusercontent.com/Axelle78/test/master/fleche_rouge_aug.png" width=30% height=10% >
+                      card_mod:
+                        style: |
+                          ha-markdown {
+                           padding: 10 0 -5 0 !important;
+                          }
+                          ha-card {
+                           margin-bottom: -10px
+                           font-size: 15px;
+                           color : #E7E7E7;
+                           text-align: center;
+                           --mdc-icon-size: 20px;
+                           background-size: 100% 400px;
+                           border-radius:10px;
+                           box-shadow: 
+                           {%- set couleur= states('sensor.rte_tempo_couleur_actuelle') %}
+                           {%- if couleur=='Bleu' %} 0px 0px 10px 3px rgba(50,130,246)  
+                           {%- elif couleur=='Blanc' %} 0px 0px 10px 3px rgba(246,246,246)
+                           {%- elif couleur=='Rouge' %} 0px 0px 10px 3px rgba(246,47,8)
+                           {%- else %} 0px 0px 10px 3px rgba(195,195,195)
+                           {%- endif %}
+                          }    
+                  - type: conditional
+                    conditions:
+                      - condition: numeric_state
+                        entity: sensor.evol_cout_hier
+                        below: 0
+                    card:
+                      type: markdown
+                      content: >-
+                        <b>Coûts</b>
+
+                        <hr width="500" size="4" align=center color
+                        ="#00ff00"></hr>
+
+                         {{ (states('sensor.cout_tempo_jour_total')|float)|round(2)}}  € 
+                         {{ (states('sensor.evol_cout_hier')|float)|round(2)}} %  
+
+                        <img
+
+                        src="https://raw.githubusercontent.com/Axelle78/test/master/fleche_vert_dim.png"
+
+                        width=30% height=10% >
+                      card_mod:
+                        style: |
+                          ha-markdown {
+                            padding: 10 0 -5 0 !important;
+                           }
+                           ha-card {
+                            margin-bottom: -10px
+                            font-size: 15px;
+                            color : #E7E7E7;
+                            text-align: center;
+                            --mdc-icon-size: 20px;
+                            background-size: 100% 400px;
+                            border-radius:10px;
+                            box-shadow: 
+                            {%- set couleur= states('sensor.rte_tempo_couleur_actuelle') %}
+                            {%- if couleur=='Bleu' %} 0px 0px 10px 3px rgba(50,130,246)  
+                            {%- elif couleur=='Blanc' %} 0px 0px 10px 3px rgba(246,246,246)
+                            {%- elif couleur=='Rouge' %} 0px 0px 10px 3px rgba(246,47,8)
+                            {%- else %} 0px 0px 10px 3px rgba(195,195,195)
+                            {%- endif %}
+                           }   
+                  - type: conditional
+                    conditions:
+                      - condition: numeric_state
+                        entity: sensor.evol_conso_hier
+                        above: 0
+                    card:
+                      type: markdown
+                      content: >-
+                        <b>Conso</b> 
+
+                        <hr width="500" size="4" align=center
+                        color="#00ff00"></hr>
+
+
+                        {{ (states('sensor.conso_tempo_jour_total')|
+                        float)|round(2)}} kWh  
+
+                        {{ (states('sensor.evol_conso_hier')|float)|round(2)}}
+                        %  
+
+
+
+                        <img
+                        src="https://raw.githubusercontent.com/Axelle78/test/master/fleche_rouge_aug.png"
+                        width=30% height=10% >
+                      card_mod:
+                        style: |
+                          ha-markdown {
+                           padding: 10 0 -5 0 !important;
+                          }
+                          ha-card {
+                           margin-bottom: -10px
+                           font-size: 15px;
+                           color : #E7E7E7;
+                           text-align: center;
+                           --mdc-icon-size: 20px;
+                           background-size: 100% 400px;
+                           border-radius:10px;
+                           box-shadow: 
+                           {%- set couleur= states('sensor.rte_tempo_couleur_actuelle') %}
+                           {%- if couleur=='Bleu' %} 0px 0px 10px 3px rgba(50,130,246)  
+                           {%- elif couleur=='Blanc' %} 0px 0px 10px 3px rgba(246,246,246)
+                           {%- elif couleur=='Rouge' %} 0px 0px 10px 3px rgba(246,47,8)
+                           {%- else %} 0px 0px 10px 3px rgba(195,195,195)
+                           {%- endif %}
+                          }    
+                  - type: conditional
+                    conditions:
+                      - condition: numeric_state
+                        entity: sensor.evol_conso_hier
+                        below: 0
+                    card:
+                      type: markdown
+                      content: >-
+                        <b>Conso</b> 
+
+                        <hr width="500" size="4" align=center
+                        color="#00ff00"></hr>
+
+
+                        {{ (states('sensor.conso_tempo_jour_total')|
+                        float)|round(2)}} kWh  
+
+                        {{ (states('sensor.evol_conso_hier')|float)|round(2)}}
+                        %  
+
+
+
+                        <img
+                        src="https://raw.githubusercontent.com/Axelle78/test/master/fleche_vert_dim.png"
+                        width=30% height=10% >
+                      card_mod:
+                        style: |
+                          ha-markdown {
+                           padding: 10 0 -5 0 !important;
+                          }
+                          ha-card {
+                           margin-bottom: -10px
+                           font-size: 15px;
+                           color : #E7E7E7;
+                           text-align: center;
+                           --mdc-icon-size: 20px;
+                           background-size: 100% 400px;
+                           border-radius:10px;
+                           box-shadow: 
+                           {%- set couleur= states('sensor.rte_tempo_couleur_actuelle') %}
+                           {%- if couleur=='Bleu' %} 0px 0px 10px 3px rgba(50,130,246)  
+                           {%- elif couleur=='Blanc' %} 0px 0px 10px 3px rgba(246,246,246)
+                           {%- elif couleur=='Rouge' %} 0px 0px 10px 3px rgba(246,47,8)
+                           {%- else %} 0px 0px 10px 3px rgba(195,195,195)
+                           {%- endif %}
+                          }   
+                  - type: conditional
+                    conditions:
+                      - condition: numeric_state
+                        entity: sensor.evol_production_hier
+                        above: 0.01
+                    card:
+                      type: markdown
+                      content: >-
+                        <b>Production</b>
+
+                        <hr width="500" size="4" align=center
+                        color="#00ff00"></hr>
+
+
+                        {{(states('sensor.envoy_122250004672_today_s_energy_production')|float)|round(2)/1000}}kWh   
+
+                        {{
+                        (states('sensor.evol_production_hier')|float)|round(2)}}
+                        %  
+
+
+                        <img
+                        src="https://raw.githubusercontent.com/Axelle78/test/master/fleche_vert_aug.png"
+                        width=30% height=10% >
+                      card_mod:
+                        style: |
+                          ha-markdown {
+                           padding: 10 0 -5 0 !important;
+                          }
+                          ha-card {
+                           margin-bottom: -10px
+                           font-size: 15px;
+                           color : #E7E7E7;
+                           text-align: center;
+                           --mdc-icon-size: 20px;
+                           background-size: 100% 400px;
+                           border-radius:10px;
+                           box-shadow: 
+                           {%- set couleur= states('sensor.rte_tempo_couleur_actuelle') %}
+                           {%- if couleur=='Bleu' %} 0px 0px 10px 3px rgba(50,130,246)  
+                           {%- elif couleur=='Blanc' %} 0px 0px 10px 3px rgba(246,246,246)
+                           {%- elif couleur=='Rouge' %} 0px 0px 10px 3px rgba(246,47,8)
+                           {%- else %} 0px 0px 10px 3px rgba(195,195,195)
+                           {%- endif %}
+                          }    
+                  - type: conditional
+                    conditions:
+                      - condition: numeric_state
+                        entity: sensor.evol_production_hier
+                        below: 0
+                    card:
+                      type: markdown
+                      content: >-
+                        <b>Production</b>
+
+                        <hr width="500" size="4" align=center
+                        color="#00ff00"></hr>
+
+
+                        {{(states('sensor.envoy_122250004672_today_s_energy_production')|float)|round(2)/1000}}kWh   
+
+                        {{
+                        (states('sensor.evol_production_hier')|float)|round(2)}}
+                        %  
+
+
+                        <img
+                        src="https://raw.githubusercontent.com/Axelle78/test/master/fleche_rouge_dim.png"
+                        width=30% height=10% >
+                      card_mod:
+                        style: |
+                          ha-markdown {
+                           padding: 10 0 -5 0 !important;
+                          }
+                          ha-card {
+                           margin-bottom: -10px
+                           font-size: 15px;
+                           color : #E7E7E7;
+                           text-align: center;
+                           --mdc-icon-size: 20px;
+                           background-size: 100% 400px;
+                           border-radius:10px;
+                           box-shadow: 
+                           {%- set couleur= states('sensor.rte_tempo_couleur_actuelle') %}
+                           {%- if couleur=='Bleu' %} 0px 0px 10px 3px rgba(50,130,246)  
+                           {%- elif couleur=='Blanc' %} 0px 0px 10px 3px rgba(246,246,246)
+                           {%- elif couleur=='Rouge' %} 0px 0px 10px 3px rgba(246,47,8)
+                           {%- else %} 0px 0px 10px 3px rgba(195,195,195)
+                           {%- endif %}
+                          } 
+                  - type: markdown
+                    content: >-
+                      <b>Export</b> 
+
+                      <hr width="500" size="4" align=center
+                      color="#00ff00"></hr>
+
+
+                      {{ (states('sensor.ecojoko_surplus_de_production')|float)
+                      | round(2)}} kWh  
+
+                      {{(states('sensor.ecojoko_surplus_de_production')|
+                      float)   | round * 0.13 }} €
+                    card_mod:
+                      style: |
+                        ha-markdown {
+                           padding: 10 0 -5 0 !important;
+                          }
+                          ha-card {
+                         margin-bottom: -10px;
+                         font-size: 15px;
+                         color : #E7E7E7;
+                         text-align: center;
+                         --mdc-icon-size: 20px;
+                         background-size: 100% 400px;
+                         border-radius:10px;
+                         box-shadow: 
+                         {%- set couleur= states('sensor.rte_tempo_couleur_actuelle') %}
+                         {%- if couleur=='Bleu' %} 0px 0px 10px 3px rgba(50,130,246)  
+                         {%- elif couleur=='Blanc' %} 0px 0px 10px 3px rgba(246,246,246)
+                         {%- elif couleur=='Rouge' %} 0px 0px 10px 3px rgba(246,47,8)
+                         {%- else %} 0px 0px 10px 3px rgba(195,195,195)
+                         {%- endif %}
+                        }
+          - type: custom:apexcharts-card
+            stacked: true
+            graph_span: 7d
+            span:
+              end: day
+            header:
+              show: true
+              title: Suivi Couts électricité (abonnement non inclus)
+            apex_config:
+              legend:
+                show: false
+              chart:
+                height: 170px
+            series:
+              - entity: sensor.cout_tempo_jour_blanc_hc
+                type: column
+                color: rgb(170,170,170)
+                group_by:
+                  func: last
+                  duration: 1d
+              - entity: sensor.cout_tempo_jour_blanc_hp
+                type: column
+                color: rgb(128,128,128)
+                group_by:
+                  func: last
+                  duration: 1d
+                show:
+                  datalabels: total
+              - entity: sensor.cout_tempo_jour_rouge_hp
+                type: column
+                color: rgb(255,0,0)
+                group_by:
+                  func: last
+                  duration: 1d
+                show:
+                  datalabels: total
+              - entity: sensor.cout_tempo_jour_rouge_hc
+                type: column
+                color: rgb(255,141,126)
+                group_by:
+                  func: last
+                  duration: 1d
+              - entity: sensor.cout_tempo_jour_bleu_hp
+                type: column
+                color: rgb(63,72,204)
+                group_by:
+                  func: last
+                  duration: 1d
+                show:
+                  datalabels: total
+              - entity: sensor.cout_tempo_jour_bleu_hc
+                type: column
+                color: rgb(113,155,255)
+                group_by:
+                  func: last
+                  duration: 1d
+          - type: horizontal-stack
+            cards:
+              - type: gauge
+                entity: sensor.ecojoko_consommation_temps_reel
+                max: 5000
+                min: -3000
+                needle: true
+                severity:
+                  green: -3000
+                  yellow: 0
+                  red: 1000
