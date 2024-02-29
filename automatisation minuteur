@@ -1,0 +1,26 @@
+alias: Minuteur 1
+description: ""
+trigger:
+  - platform: time_pattern
+    minutes: /5
+condition: []
+action:
+  - if:
+      - condition: state
+        entity_id: input_number.minuteur
+        state: "0.0"
+    then:
+      - service: input_number.set_value
+        metadata: {}
+        data:
+          value: 1
+        target:
+          entity_id: input_number.minuteur
+    else:
+      - service: input_number.set_value
+        metadata: {}
+        data:
+          value: 0
+        target:
+          entity_id: input_number.minuteur
+mode: single
