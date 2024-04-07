@@ -13,10 +13,10 @@ logger:
 # Enable Home Assistant API
 api:
   encryption:
-    key: "n3DFk2Ltz3BvMPZJf6aHyiVJde6mrWWri6ySf6k3e/I="
+    key: ""
 
 ota:
-  password: "676f05a50b9d5d01fe01e206fcf357ea"
+  password: ""
 
 script:
   - id: update_screen
