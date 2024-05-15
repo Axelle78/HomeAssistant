@@ -1,0 +1,203 @@
+type: custom:swipe-card
+parameters:
+  effect: coverflow
+cards:
+  - type: custom:stack-in-card
+    mode: vertical
+    cards:
+      - type: custom:mushroom-person-card
+        entity: person.axelle
+        use_entity_picture: true
+        hide_name: false
+        layout: horizontal
+        card_mod:
+          style: |
+            ha-card {
+                border: none;
+                padding: 0;
+                 }
+            :host {
+                 --mush-icon-size: 80px;  
+                 --chip-box-shadow: none;
+                  --chip-background: none;
+                 } 
+            hui-vertical-stack-card $: |
+              div#root > * {
+              margin: 0px !important;
+            }
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: template
+            icon_color: |2-
+                        {% set state=states('sensor.pixel_7a_battery_state') %}
+                        {% if state=='charging' %}
+                        green
+                        {% elif state=='discharging' %}
+                        #6f6f6f
+                       {% endif %}
+            entity: sensor.pixel_7a_battery_state
+            icon: mdi:power-plug
+            tap_action:
+              action: more-info
+            card_mod:
+              style: |
+                ha-card {
+                   padding: 0;
+                  --chip-border-width: 0px;
+                  --chip-box-shadow: none;
+                  --chip-background: none;
+                  margin-top: -30px;
+                padding-bottom: 0px;
+                padding-left: 0px;
+                padding-right: 0px;
+                }
+                hui-vertical-stack-card $: |
+                div#root > * {
+                margin: 0px !important;
+                }
+          - type: template
+            entity: sensor.pixel_7a_battery_level
+            icon: |2
+                        {% set bl = states('sensor.pixel_7a_battery_level') | int %}
+                        {% if bl < 10 %} mdi:battery-outline
+                        {% elif bl < 20 %} mdi:battery-10
+                        {% elif bl < 30 %} mdi:battery-20
+                        {% elif bl < 40 %} mdi:battery-30
+                        {% elif bl < 50 %} mdi:battery-40
+                        {% elif bl < 60 %} mdi:battery-50
+                        {% elif bl < 70 %} mdi:battery-60
+                        {% elif bl < 80 %} mdi:battery-70
+                        {% elif bl < 90 %} mdi:battery-80
+                        {% elif bl < 100 %} mdi:battery-90
+                        {% elif bl == 100 %} mdi:battery
+                        {% else %} mdi:battery-unknown
+                        {% endif %}
+            icon_color: |2-
+                        {% set bl = states('sensor.pixel_7a_battery_level') | int %}
+                        {% if bl < 10 %} red
+                        {% elif bl < 20 %} red
+                        {% elif bl < 30 %} red
+                        {% elif bl < 40 %} orange
+                        {% elif bl < 50 %} orange
+                        {% elif bl < 60 %} green
+                        {% elif bl < 70 %} green
+                        {% elif bl < 80 %} green
+                        {% elif bl < 90 %} green
+                        {% elif bl < 100 %} green
+                        {% elif bl == 100 %} green
+                        {% else %} grey
+                        {% endif %}
+            content: |
+              {% set bl = states('sensor.pixel_7a_battery_level') | int %}
+              {% if bl < 100 %} 
+              {{ states('sensor.pixel_7a_battery_level') | int }}%
+              {% endif %}
+            tap_action:
+              action: more-info
+            card_mod:
+              style: |
+                ha-card {
+                  padding: 0;
+                  --chip-border-width: 0px;
+                  --chip-box-shadow: none;
+                  --chip-background: none;
+                  padding-top: 0px;
+                margin-top: -30px;
+                padding-bottom: 0px;
+                padding-left: 0px;
+                padding-right: 0px;
+                }
+                hui-vertical-stack-card $: |
+                  div#root > * {
+                  margin: 0px !important;
+                }
+        alignment: center
+  - type: custom:stack-in-card
+    mode: vertical
+    cards:
+      - type: custom:button-card
+        entity: person.axelle
+        show_name: false
+        show_icon: false
+        aspect_ratio: 4/2
+        size: 50px
+        styles:
+          card:
+            - padding: 4%
+          custom_fields:
+            name:
+              - font-size: 20px;
+              - position: absolute
+              - left: 4%
+              - top: 12%
+              - color: '#ffffff'
+            steps:
+              - font-size: 15px;
+              - align-self: left
+              - position: absolute
+              - left: 4%
+              - top: 35%
+              - color: '#ffffff'
+            today:
+              - font-size: 15px;
+              - align-self: left
+              - position: absolute
+              - left: 4%
+              - top: 55%
+              - color: '#ffffff'
+            tomorrow:
+              - font-size: 15px;
+              - align-self: left
+              - position: absolute
+              - left: 4%
+              - top: 75%
+              - color: '#ffffff'
+        custom_fields:
+          name: |
+            [[[ return '<span> Axelle </span>'
+            ]]]
+          steps: |
+            [[[
+              return `<ha-icon
+                icon="mdi:shoe-formal"
+                style="width: 20px; height: 20px;"></ha-icon
+                <span> ${states['sensor.total_steps_2'].state}</span>`
+            ]]]
+          today: |
+            [[[
+              if (states['calendar.axelle'].state == "on")
+                return `<ha-icon
+                  icon="mdi:calendar-account-outline"
+                  style="width: 22px; height: 22px;">
+                  </ha-icon>
+                  <span>${states['sensor.today_axelle'].state}  </span>`
+              else 
+                return `<ha-icon
+                  icon="mdi:calendar-account-outline"
+                  style="width: 22px; height: 22px;">
+                  </ha-icon>
+                  <span> A la maison</span>`
+            ]]]
+          tomorrow: |
+            [[[
+              if (states['input_text.agendaax'].state != "")
+                return `<ha-icon
+                  icon="mdi:calendar-clock"
+                  style="width: 22px; height: 22px;">
+                  </ha-icon>
+                  <span>${states['input_text.agendaax'].state}  </span>`
+              else 
+                return `<ha-icon
+                  icon="mdi:calendar-clock"
+                  style="width: 22px; height: 22px;">
+                  </ha-icon>
+                  <span>A la maison</span>`
+            ]]]
+        card_mod:
+          style: |
+            ha-card { 
+              background-color: rgba(0,0,0,0);
+              box-shadow: none;
+              font-color: white;
+              font-size: 15;
+            }
