@@ -1,0 +1,128 @@
+type: custom:stack-in-card
+cards:
+  - type: markdown
+    content: <center>Salon</center>
+  - type: custom:apexcharts-card
+    chart_type: radialBar
+    series:
+      - entity: sensor.indoor_temperature
+        color: rgb(0, 87, 34)
+        max: 50
+        show:
+          legend_value: false
+    apex_config:
+      plotOptions:
+        radialBar:
+          offsetY: 0
+          startAngle: -90
+          endAngle: 90
+          hollow:
+            size: 80%
+          dataLabels:
+            name:
+              show: false
+            value:
+              show: false
+          track:
+            strokeWidth: 90%
+            margin: 0
+      fill:
+        type: gradient
+        gradient:
+          shade: light
+          type: horizontal
+          shadeIntensity: 0.3
+          inverseColors: false
+          opacityFrom: 1
+          opacityTo: 1
+          stops:
+            - 0
+            - 20
+            - 30
+            - 40
+      legend:
+        show: false
+      chart:
+        height: 220
+    card_mod:
+      style: |
+        ha-card {
+        margin-top: -30px;
+         }
+  - type: custom:apexcharts-card
+    chart_type: radialBar
+    series:
+      - entity: sensor.indoor_humidity
+        color: blue
+        max: 100
+        show:
+          legend_value: false
+    apex_config:
+      plotOptions:
+        radialBar:
+          offsetY: 100
+          startAngle: 90
+          endAngle: 270
+          hollow:
+            size: 80%
+          dataLabels:
+            name:
+              show: false
+            value:
+              show: false
+          track:
+            strokeWidth: 80%
+            margin: 0
+      fill:
+        type: gradient
+        gradient:
+          shade: light
+          type: horizontal
+          shadeIntensity: 0.3
+          inverseColors: false
+          opacityFrom: 1
+          opacityTo: 1
+          stops:
+            - 0
+            - 20
+            - 30
+            - 40
+      legend:
+        show: false
+      chart:
+        height: 220
+    card_mod:
+      style: |
+        ha-card {
+        margin-top: -260px;
+         }
+  - type: custom:mushroom-entity-card
+    entity: sensor.indoor_temperature
+    primary_info: state
+    secondary_info: none
+    name: Salon
+    icon_color: green
+    layout: horizontal
+    card_mod:
+      style: |
+        ha-card {
+          margin-top: -165px;
+          width: 200px;
+          margin-left: 60px;
+          margin-right: auto;
+        }
+  - type: custom:mushroom-entity-card
+    entity: sensor.indoor_humidity
+    primary_info: state
+    secondary_info: none
+    name: Salon
+    icon_color: blue
+    layout: horizontal
+    card_mod:
+      style: |
+        ha-card {
+          margin-top: -120px;
+          width: 200px;
+          margin-left: 60px;
+          margin-right: auto;
+        }
