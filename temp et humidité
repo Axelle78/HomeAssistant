@@ -6,7 +6,7 @@ cards:
     chart_type: radialBar
     series:
       - entity: sensor.indoor_temperature
-        color: rgb(0, 87, 34)
+        color: green
         max: 50
         show:
           legend_value: false
@@ -29,17 +29,20 @@ cards:
       fill:
         type: gradient
         gradient:
-          shade: light
+          shade: dark
           type: horizontal
-          shadeIntensity: 0.3
+          shadeIntensity: 0.5
           inverseColors: false
+          gradientToColors:
+            - '#DCFE04'
+            - '#FEEF04'
+            - '#FEB204'
+            - '#FE4404'
           opacityFrom: 1
           opacityTo: 1
           stops:
             - 0
-            - 20
-            - 30
-            - 40
+            - 100
       legend:
         show: false
       chart:
@@ -53,7 +56,7 @@ cards:
     chart_type: radialBar
     series:
       - entity: sensor.indoor_humidity
-        color: blue
+        color: '#04FEF3'
         max: 100
         show:
           legend_value: false
@@ -79,14 +82,14 @@ cards:
           shade: light
           type: horizontal
           shadeIntensity: 0.3
-          inverseColors: false
+          inverseColors: true
+          gradientToColors:
+            - '#0408FE'
           opacityFrom: 1
           opacityTo: 1
           stops:
             - 0
-            - 20
-            - 30
-            - 40
+            - 100
       legend:
         show: false
       chart:
@@ -106,10 +109,13 @@ cards:
     card_mod:
       style: |
         ha-card {
-          margin-top: -165px;
-          width: 200px;
-          margin-left: 60px;
-          margin-right: auto;
+          position: absolute;
+          top: 35%;
+          left : 24%;
+         }
+        :host {
+         --card-primary-font-size: 20px !important;
+         --mush-icon-size: 25px; 
         }
   - type: custom:mushroom-entity-card
     entity: sensor.indoor_humidity
@@ -121,8 +127,11 @@ cards:
     card_mod:
       style: |
         ha-card {
-          margin-top: -120px;
-          width: 200px;
-          margin-left: 60px;
-          margin-right: auto;
+          position: absolute;
+          top: 50%;
+          left : 24%;
+           }
+        :host {
+         --card-primary-font-size: 20px !important;
+         --mush-icon-size: 25px; 
         }
