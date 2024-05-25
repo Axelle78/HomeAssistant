@@ -1,0 +1,47 @@
+- trigger:
+    - platform: time_pattern
+      minutes: /15
+  action:
+    - service: weather.get_forecasts
+      data:
+        type: daily
+      target:
+        entity_id: weather.mantes_la_jolie
+      response_variable: daily
+      
+  sensor:
+    - name: Temperature forecast day 1
+      unique_id: temperature_forecast_day1
+      state: "{{ daily['weather.mantes_la_jolie'].forecast[0].temperature }}"
+      unit_of_measurement: °C
+    - name: Temperature forecast day 2
+      unique_id: temperature_forecast_day2
+      state: "{{ daily['weather.mantes_la_jolie'].forecast[1].temperature }}"
+      unit_of_measurement: °C
+    - name: Temperature forecast day 3
+      unique_id: temperature_forecast_day3
+      state: "{{ daily['weather.mantes_la_jolie'].forecast[2].temperature }}"
+      unit_of_measurement: °C
+    - name: Temperature forecast day 4
+      unique_id: temperature_forecast_day4
+      state: "{{ daily['weather.mantes_la_jolie'].forecast[3].temperature }}"
+      unit_of_measurement: °C
+    - name: Temperature forecast day 5
+      unique_id: temperature_forecast_day5
+      state: "{{ daily['weather.mantes_la_jolie'].forecast[4].temperature }}"
+      unit_of_measurement: °C
+    - name: Temperature forecast conditionJ 1
+      unique_id: temperature_forecast_conditionJ1
+      state: "{{ daily['weather.mantes_la_jolie'].forecast[0].condition }}"
+    - name: Temperature forecast conditionJ 2
+      unique_id: temperature_forecast_conditionJ2
+      state: "{{ daily['weather.mantes_la_jolie'].forecast[1].condition }}"
+    - name: Temperature forecast conditionJ 3
+      unique_id: temperature_forecast_conditionJ3
+      state: "{{ daily['weather.mantes_la_jolie'].forecast[2].condition }}"
+    - name: Temperature forecast conditionJ 4
+      unique_id: temperature_forecast_conditionJ4
+      state: "{{ daily['weather.mantes_la_jolie'].forecast[3].condition }}"
+    - name: Temperature forecast conditionJ 5
+      unique_id: temperature_forecast_conditionJ5
+      state: "{{ daily['weather.mantes_la_jolie'].forecast[4].condition }}"     
