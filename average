@@ -1,0 +1,29 @@
+sensor:
+  - platform: average
+    name: "Consommation moyenne hier"
+    start: "{{ as_timestamp( now() ) -  90000 }}"
+    duration:
+      hours: 1
+    entities:
+      - sensor.ecojoko_consommation_reseau
+  - platform: average
+    name: "Cout moyen hier"
+    start: "{{ as_timestamp( now() ) -  90000 }}"
+    duration:
+      hours: 1
+    entities:
+      - sensor.cout_tempo_jour_total
+  - platform: average
+    name: "production moyenne hier"
+    start: "{{ as_timestamp( now() ) -  90000 }}"
+    duration:
+      hours: 1
+    entities:
+      - sensor.envoy_122250004672_today_s_energy_production
+  - platform: average
+    name: "Export moyen hier"
+    start: "{{ as_timestamp( now() ) -  90000 }}"
+    duration:
+      hours: 1
+    entities:
+      - sensor.ecojoko_surplus_de_production
