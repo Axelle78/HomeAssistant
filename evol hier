@@ -1,0 +1,32 @@
+      evol_conso_hier:
+        friendly_name: "Evol hier conso"
+        value_template: >-
+          {{ (((states('sensor.conso_tempo_jour_total') | float(0) | round(2)  - state_attr('sensor.consommation_moyenne_hier','max_value') | float(0) | round(2) )  / state_attr('sensor.consommation_moyenne_hier','max_value') | float(0) | round(2) ) *100) | float(0) | round(2) }}
+        unit_of_measurement: "%"
+        icon_template: "mdi:currency-eur"
+      evol_export_hier:
+        friendly_name: "Evol hier export"
+        value_template: >-
+          {% if  state_attr('sensor.export_moyen_hier','max_value') >0  %}
+          {{ (((states('sensor.ecojoko_surplus_de_production') | float(0) | round(2)  - state_attr('sensor.export_moyen_hier','max_value') | float(0) | round(2) )  / state_attr('sensor.export_moyen_hier','max_value') | float(0) | round(2) ) *100) | float(0) | round(2) }}
+          {% else %}
+          0
+          {% endif %}
+        unit_of_measurement: "%"
+        icon_template: "mdi:currency-eur"
+      evol_production_hier:
+        friendly_name: "Evol hier production"
+        value_template: >-
+          {% if  state_attr('sensor.production_moyenne_hier','max_value') >0  %}
+          {{ (((states('sensor.envoy_122250004672_today_s_energy_production') | float(0) | round(2)  - state_attr('sensor.production_moyenne_hier','max_value') | float(0) | round(2) )  / state_attr('sensor.production_moyenne_hier','max_value') | float(0) | round(2) ) *100) | float(0) | round(2) }}
+          {% else %}
+          0
+          {% endif %}
+        unit_of_measurement: "%"
+        icon_template: "mdi:currency-eur"
+      evol_cout_hier:
+        friendly_name: "Evol hier cout"
+        value_template: >-
+          {{ (((states('sensor.cout_tempo_jour_total') | float(0) | round(2)  - state_attr('sensor.cout_moyen_hier','max_value') | float(0) | round(2) )  / state_attr('sensor.cout_moyen_hier','max_value') | float(0) | round(2) ) *100) | float(0) | round(2) }}
+        unit_of_measurement: "%"
+        icon_template: "mdi:currency-eur"
