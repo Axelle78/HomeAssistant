@@ -1,0 +1,26 @@
+alias: CALENDRIER -  Définir Anniversaire
+description: ""
+trigger:
+  - platform: time_pattern
+    minutes: "30"
+condition: []
+action:
+  - service: calendar.get_events
+    target:
+      entity_id:
+        - calendar.anniversaires
+    data:
+      end_date_time: "{{ now().replace(hour=00, minute=00, second=0) + timedelta( days = 1 )}}"
+      start_date_time: "{{ now().replace(hour=00, minute=00, second=0) }}"
+    response_variable: agendaax
+  - service: input_text.set_value
+    data_template:
+      value: |-
+        {% for event in agendaax['calendar.anniversaires'].events %}
+         {% if as_timestamp(event.start) <= as_timestamp(states('sensor.date')) %}
+         {{ event.summary }}
+        {% endif %}
+        {% endfor %}
+    target:
+      entity_id: input_text.anniversaire
+mode: single
