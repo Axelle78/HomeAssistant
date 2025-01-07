@@ -1,5 +1,5 @@
 views:
-  - title: Home //DASHBOARD PRINCIPAL
+  - title: Home
     type: sections
     sections:
       - type: grid
