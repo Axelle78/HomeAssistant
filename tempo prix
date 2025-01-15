@@ -1,0 +1,92 @@
+- unique_id: "tempo_time_prices"
+  sensor:
+    - name: "EDF Tempo Prix Actuel"
+      unique_id: "current"
+      device_class: 'monetary'
+      unit_of_measurement: "c€/kWh"
+      icon: 'mdi:cash-check'
+      availability: >
+        {{ not 'unavailable' in
+          [
+            states('sensor.rte_tempo_couleur_actuelle'),
+            states('binary_sensor.rte_tempo_heures_creuses'),
+          ] and not 'unknown' in
+          [
+            states('sensor.rte_tempo_couleur_actuelle'),
+            states('binary_sensor.rte_tempo_heures_creuses'),
+            states('input_number.tarif_edf_tempo_bleu_hp'),
+            states('input_number.tarif_edf_tempo_bleu_hc'),
+            states('input_number.tarif_edf_tempo_blanc_hp'),
+            states('input_number.tarif_edf_tempo_blanc_hc'),
+            states('input_number.tarif_edf_tempo_rouge_hp'),
+            states('input_number.tarif_edf_tempo_rouge_hc')
+          ]
+        }}
+      state: >
+        {%- if is_state('sensor.rte_tempo_couleur_actuelle', "Bleu") %}
+          {%- if is_state('binary_sensor.rte_tempo_heures_creuses', 'off') %}
+            {{ states('input_number.tarif_edf_tempo_bleu_hp') | float * 100 }}
+          {%- else %}
+            {{ states('input_number.tarif_edf_tempo_bleu_hc') | float * 100 }}
+          {%- endif %}
+        {%- elif is_state('sensor.rte_tempo_couleur_actuelle', "Blanc") %}
+          {%- if is_state('binary_sensor.rte_tempo_heures_creuses', 'off') %}
+            {{ states('input_number.tarif_edf_tempo_blanc_hp') | float * 100 }}
+          {%- else %}
+            {{ states('input_number.tarif_edf_tempo_blanc_hc') | float * 100 }}
+          {%- endif %}
+        {%- elif is_state('sensor.rte_tempo_couleur_actuelle', "Rouge") %}
+          {%- if is_state('binary_sensor.rte_tempo_heures_creuses', 'off') %}
+            {{ states('input_number.tarif_edf_tempo_rouge_hp') | float * 100 }}
+          {%- else %}
+            {{ states('input_number.tarif_edf_tempo_rouge_hc') | float * 100 }}
+          {%- endif %}
+        {%- else %}
+          0
+        {%- endif %}
+    - name: "EDF Tempo Prochain Prix"
+      unique_id: "next"
+      device_class: 'monetary'
+      unit_of_measurement: "c€/kWh"
+      icon: 'mdi:cash-clock'
+      availability: >
+        {{ not 'unavailable' in
+          [
+            states('sensor.rte_tempo_couleur_actuelle'),
+            states('sensor.rte_tempo_prochaine_couleur'),
+            states('binary_sensor.rte_tempo_heures_creuses'),
+          ] and not 'unknown' in
+          [
+            states('sensor.rte_tempo_couleur_actuelle'),
+            states('sensor.rte_tempo_prochaine_couleur'),
+            states('binary_sensor.rte_tempo_heures_creuses'),
+            states('input_number.tarif_edf_tempo_bleu_hp'),
+            states('input_number.tarif_edf_tempo_bleu_hc'),
+            states('input_number.tarif_edf_tempo_blanc_hp'),
+            states('input_number.tarif_edf_tempo_blanc_hc'),
+            states('input_number.tarif_edf_tempo_rouge_hp'),
+            states('input_number.tarif_edf_tempo_rouge_hc')
+          ]
+        }}
+      state: >
+        {%- if is_state('binary_sensor.rte_tempo_heures_creuses', 'on') %}
+          {%- if is_state('sensor.rte_tempo_prochaine_couleur', "Bleu") %}
+            {{ states('input_number.tarif_edf_tempo_bleu_hp') | float * 100 }}
+          {%- elif is_state('sensor.rte_tempo_prochaine_couleur', "Blanc") %}
+            {{ states('input_number.tarif_edf_tempo_blanc_hp') | float * 100 }}
+          {%- elif is_state('sensor.rte_tempo_prochaine_couleur', "Rouge") %}
+            {{ states('input_number.tarif_edf_tempo_rouge_hp') | float * 100 }}
+          {%- else %}
+            0
+          {%- endif %}
+        {%- else %}
+          {%- if is_state('sensor.rte_tempo_couleur_actuelle', "Bleu") %}
+            {{ states('input_number.tarif_edf_tempo_bleu_hc') | float * 100 }}
+          {%- elif is_state('sensor.rte_tempo_couleur_actuelle', "Blanc") %}
+            {{ states('input_number.tarif_edf_tempo_blanc_hc') | float * 100 }}
+          {%- elif is_state('sensor.rte_tempo_couleur_actuelle', "Rouge") %}
+            {{ states('input_number.tarif_edf_tempo_rouge_hc') | float * 100 }}
+          {%- else %}
+            0
+          {%- endif %}
+        {%- endif %}
