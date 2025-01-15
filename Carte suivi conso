@@ -1,0 +1,61 @@
+type: custom:stack-in-card
+cards:
+  - type: custom:mushroom-template-card
+    primary: >-
+      Chauffage Salon  : {{states('sensor.consommation_instantannee_chauffage')
+      | float(0) | round(0)}} W 
+    secondary: "{{states('sensor.salon_daily_consumption') | float(0) | round(2)}} kWh"
+    icon: mdi:lightning-bolt
+    icon_color: |-
+      {%if state_attr('climate.chauffage_salon', 'hvac_action')=="off"%} grey 
+      {%elif state_attr('climate.chauffage_salon', 'hvac_action')=="idle"%} blue
+      {%else%} red
+      {%endif%}
+    card_mod:
+      style: |
+        ha-card {
+          z-index: 1;
+          --ha-card-border-width: 0;
+          --card-primary-font-size: 15px;
+          --card-secondary-font-size: 14px;
+        }
+  - type: custom:mini-graph-card
+    entities:
+      - entity: sensor.consommation_instantannee_chauffage
+        color: orange
+        smoothing: false
+        aggregate_func: min
+    height: 80
+    hours_to_show: 24
+    points_per_hour: 10
+    line_width: 1
+    animate: true
+    show:
+      name: false
+      icon: false
+      state: false
+      legend: false
+      fill: fade
+    card_mod:
+      style: |
+        ha-card {
+          position: absolute !important;
+          height: 100%;
+          width: 80%;
+          right: 0px;
+          bottom: 0px;
+          --ha-card-border-width: 0;
+        }
+        ha-card:after {
+          content: "";
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          'background: linear-gradient(to right, var(--card-background-color), transparent);
+          --ha-card-border-width: 0;
+        }
+card_mod:
+  style: |
+    ha-card {
+    --ha-card-border-width: 0;
+      }
