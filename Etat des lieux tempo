@@ -1,0 +1,63 @@
+type: horizontal-stack
+cards:
+  - type: custom:button-card
+    entity: sensor.cout_tempo_jour_total
+    label: |
+      [[[
+         var label = ""
+          label = '<b>Rouge</b><hr width="100" size="1" align=center color ="#FFFFFF"></hr>' + states['sensor.rte_tempo_cycle_jours_restants_rouge'].state + '/'  + states['sensor.nb_jours_rouge_total'].state + '<br>HP ' + states['sensor.tarif_jour_rouge_hp'].state + '<BR>'+'HC ' + states['sensor.tarif_jour_rouge_hc'].state
+          return label;
+      ]]]
+    show_label: true
+    show_icon: false
+    show_state: false
+    show_name: false
+    card_mod:
+      style: |
+        ha-card {
+         border-radius:10px; 
+         padding-top: 5px;
+         background-color: red;
+
+        } 
+  - type: custom:button-card
+    entity: sensor.cout_tempo_jour_total
+    label: |
+      [[[
+         var label = ""
+          label = '<b>Blanc</b><hr width="100" size="1" align=center color ="#00000"></hr>' + states['sensor.rte_tempo_cycle_jours_restants_blanc'].state + '/'  + states['sensor.nb_jours_blanc_total'].state + '<br>HP ' + states['sensor.tarif_jour_blanc_hp'].state + '<BR>'+'HC ' + states['sensor.tarif_jour_blanc_hc'].state
+          return label;
+      ]]]
+    show_label: true
+    show_icon: false
+    show_state: false
+    show_name: false
+    card_mod:
+      style: |
+        ha-card {
+         border-radius:10px; 
+         padding-top: 5px;
+         color: black;
+         background-color: white;
+
+        } 
+  - type: custom:button-card
+    entity: sensor.cout_tempo_jour_total
+    label: |
+      [[[
+         var label = ""
+          label = '<b>Bleu</b><hr width="100" size="1" align=center color ="#FFFFFF"></hr>' + states['sensor.rte_tempo_cycle_jours_restants_bleu'].state + '/'  + states['sensor.nb_jours_bleu_total'].state + '<br>HP ' + states['sensor.tarif_jour_bleu_hp'].state + '<BR>'+'HC ' + states['sensor.tarif_jour_bleu_hc'].state
+          return label;
+      ]]]
+    show_label: true
+    show_icon: false
+    show_state: false
+    show_name: false
+    card_mod:
+      style: |
+        ha-card {
+         border-radius:10px; 
+         padding-top: 5px;
+         background-color: blue;
+
+        } 
