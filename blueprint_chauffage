@@ -1,0 +1,115 @@
+blueprint:
+  name: Liaison directe Moes → Chauffage (switch)
+  description: >
+    Allume/éteint un switch (prise/relais) en suivant le running_state du thermostat Moes (TS0601).
+    Option : ne fonctionner que si le Moes est en hvac_mode autorisé (heat/auto) et si un booléen "enable" est ON.
+    Anti-flap : petit délai de stabilisation du running_state.
+  domain: automation
+  input:
+    moes_climate:
+      name: Thermostat Moes (climate)
+      description: Entité climate du Moes (ex: climate.chauffage_chambre_chloe)
+      selector: { entity: { domain: climate } }
+    heater_switch:
+      name: Switch chauffage (prise/relais)
+      description: Entité switch qui alimente le radiateur (ex: switch.chauffage_chloe)
+      selector: { entity: { domain: switch } }
+    enable_boolean:
+      name: (Option) Interrupteur d’activation
+      description: Si défini, l’automatisation n’agit que si ce boolean est ON.
+      default:
+      selector: { entity: { domain: input_boolean } }
+    allowed_modes:
+      name: (Option) HVAC modes autorisés
+      description: L’automatisation n’agit que si le Moes est dans l’un de ces modes.
+      default:
+        - heat
+        - auto
+      selector:
+        select:
+          options: [heat, auto, off, cool, dry, fan_only]
+          multiple: true
+          mode: list
+    debounce_seconds:
+      name: (Option) Délai de stabilisation (anti-flap)
+      description: Temps pendant lequel le running_state doit rester identique avant action.
+      default: 2
+      selector: { number: { min: 0, max: 10, unit_of_measurement: s, mode: slider } }
+
+mode: restart
+max_exceeded: silent
+
+variables:
+  v_moes: !input moes_climate
+  v_switch: !input heater_switch
+  v_enable: !input enable_boolean
+  v_allowed_modes: !input allowed_modes
+  v_debounce: !input debounce_seconds
+
+trigger:
+  - id: running
+    platform: state
+    entity_id: !input moes_climate
+    attribute: running_state
+  - id: hvac_mode
+    platform: state
+    entity_id: !input moes_climate
+    attribute: hvac_mode
+  - id: enable_toggle
+    platform: state
+    entity_id: !input enable_boolean
+    optional: true
+  - id: ha_start
+    platform: homeassistant
+    event: start
+
+condition: []
+
+action:
+  - variables:
+      moes_state: "{{ state_attr(v_moes, 'running_state') | lower if state_attr(v_moes, 'running_state') is not none else '' }}"
+      moes_mode: "{{ state_attr(v_moes, 'hvac_mode') | lower if state_attr(v_moes, 'hvac_mode') is not none else states(v_moes) | lower }}"
+      enable_ok: "{{ v_enable is none or is_state(v_enable, 'on') }}"
+      mode_ok: >
+        {{ v_allowed_modes | default(['heat','auto']) | select('lower') | list | contains(moes_mode) }}
+
+  # Si désactivé ou mode non autorisé → couper le chauffage et sortir
+  - if:
+      - condition: template
+        value_template: "{{ not enable_ok or not mode_ok }}"
+    then:
+      - choose:
+          - conditions: "{{ is_state(v_switch, 'on') }}"
+            sequence:
+              - service: switch.turn_off
+                target: { entity_id: !input heater_switch }
+      - stop: "Désactivé ou mode non autorisé"
+
+  # Anti-flap / stabilisation
+  - delay:
+      seconds: "{{ v_debounce | int }}"
+  - variables:
+      moes_state2: "{{ state_attr(v_moes, 'running_state') | lower if state_attr(v_moes, 'running_state') is not none else '' }}"
+  - if:
+      - condition: template
+        value_template: "{{ moes_state2 == moes_state }}"
+    then:
+      - choose:
+          # Chauffe demandée par le Moes
+          - conditions: "{{ moes_state2 in ['heat','heating','run','running','on','active'] }}"
+            sequence:
+              - choose:
+                  - conditions: "{{ is_state(v_switch, 'off') }}"
+                    sequence:
+                      - service: switch.turn_on
+                        target: { entity_id: !input heater_switch }
+          # Pas de chauffe
+          - conditions: "{{ moes_state2 in ['idle','off','stop','stopped','inactive',''] }}"
+            sequence:
+              - choose:
+                  - conditions: "{{ is_state(v_switch, 'on') }}"
+                    sequence:
+                      - service: switch.turn_off
+                        target: { entity_id: !input heater_switch }
+      # Si l’état a changé pendant le délai, on relancera à la prochaine transition
+
