@@ -1,0 +1,259 @@
+blueprint:
+  name: Onvis HS2 5 Button Actiond Dispatcher
+  description: >
+    Use all 5 buttons (single, double and long press) of an Onvis HS2 Smart
+    Button that is paired via HomeKit Controller. Works regardless of Thread
+    or Bluetooth. You configure the actions for each press type.
+  domain: automation
+  input:
+    onvis_smartswitch:
+      name: Onvis HS2 device
+      description: >
+        Select your Onvis HS2 5 button device.
+      selector:
+        device:
+          multiple: false
+
+    # Button 1 actions (center)
+    button1_sp:
+      name: Button 1 -- single press
+      default: []
+      description: Action to run when Button 1 is single pressed
+      selector:
+        action: {}
+    button1_dp:
+      name: Button 1 -- double press
+      default: []
+      description: Action to run when Button 1 is double pressed
+      selector:
+        action: {}
+    button1_lp:
+      name: Button 1 -- long press
+      default: []
+      description: Action to run when Button 1 is long pressed
+      selector:
+        action: {}
+
+    # Button 2 actions
+    button2_sp:
+      name: Button 2 -- single press
+      default: []
+      description: Action to run when Button 2 is single pressed
+      selector:
+        action: {}
+    button2_dp:
+      name: Button 2 -- double press
+      default: []
+      description: Action to run when Button 2 is double pressed
+      selector:
+        action: {}
+    button2_lp:
+      name: Button 2 -- long press
+      default: []
+      description: Action to run when Button 2 is long pressed
+      selector:
+        action: {}
+
+    # Button 3 actions
+    button3_sp:
+      name: Button 3 -- single press
+      default: []
+      description: Action to run when Button 3 is single pressed
+      selector:
+        action: {}
+    button3_dp:
+      name: Button 3 -- double press
+      default: []
+      description: Action to run when Button 3 is double pressed
+      selector:
+        action: {}
+    button3_lp:
+      name: Button 3 -- long press
+      default: []
+      description: Action to run when Button 3 is long pressed
+      selector:
+        action: {}
+
+    # Button 4 actions
+    button4_sp:
+      name: Button 4 -- single press
+      default: []
+      description: Action to run when Button 4 is single pressed
+      selector:
+        action: {}
+    button4_dp:
+      name: Button 4 -- double press
+      default: []
+      description: Action to run when Button 4 is double pressed
+      selector:
+        action: {}
+    button4_lp:
+      name: Button 4 -- long press
+      default: []
+      description: Action to run when Button 4 is long pressed
+      selector:
+        action: {}
+
+    # Button 5 actions
+    button5_sp:
+      name: Button 5 -- single press
+      default: []
+      description: Action to run when Button 5 is single pressed
+      selector:
+        action: {}
+    button5_dp:
+      name: Button 5 -- double press
+      default: []
+      description: Action to run when Button 5 is double pressed
+      selector:
+        action: {}
+    button5_lp:
+      name: Button 5 -- long press
+      default: []
+      description: Action to run when Button 5 is long pressed
+      selector:
+        action: {}
+
+mode: single
+max_exceeded: silent
+
+trigger_variables:
+  dev_id: !input onvis_smartswitch
+
+  # Collect and sort all event.* entities for this device
+  hs2_event_entities: >
+    {{ device_entities(dev_id)
+       | select('search', '^event\\.')
+       | list
+       | sort }}
+
+  # Rotate mapping so the last entity (center button) is logical Button 1
+  hs2_btn1: "{{ hs2_event_entities[4] if hs2_event_entities|length > 4 else none }}"
+  hs2_btn2: "{{ hs2_event_entities[0] if hs2_event_entities|length > 0 else none }}"
+  hs2_btn3: "{{ hs2_event_entities[1] if hs2_event_entities|length > 1 else none }}"
+  hs2_btn4: "{{ hs2_event_entities[2] if hs2_event_entities|length > 2 else none }}"
+  hs2_btn5: "{{ hs2_event_entities[3] if hs2_event_entities|length > 3 else none }}"
+
+trigger:
+  - platform: event
+    id: B1
+    event_type: state_changed
+    event_data:
+      entity_id: "{{ hs2_btn1 }}"
+  - platform: event
+    id: B2
+    event_type: state_changed
+    event_data:
+      entity_id: "{{ hs2_btn2 }}"
+  - platform: event
+    id: B3
+    event_type: state_changed
+    event_data:
+      entity_id: "{{ hs2_btn3 }}"
+  - platform: event
+    id: B4
+    event_type: state_changed
+    event_data:
+      entity_id: "{{ hs2_btn4 }}"
+  - platform: event
+    id: B5
+    event_type: state_changed
+    event_data:
+      entity_id: "{{ hs2_btn5 }}"
+
+variables:
+  last_event_type: >
+    {% set ns = trigger.event.data.new_state if trigger is defined else none %}
+    {{ ns.attributes.event_type if ns is not none else none }}
+
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: B1
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ last_event_type == 'single_press' }}"
+                sequence: !input button1_sp
+              - conditions:
+                  - condition: template
+                    value_template: "{{ last_event_type == 'double_press' }}"
+                sequence: !input button1_dp
+              - conditions:
+                  - condition: template
+                    value_template: "{{ last_event_type == 'long_press' }}"
+                sequence: !input button1_lp
+
+      - conditions:
+          - condition: trigger
+            id: B2
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ last_event_type == 'single_press' }}"
+                sequence: !input button2_sp
+              - conditions:
+                  - condition: template
+                    value_template: "{{ last_event_type == 'double_press' }}"
+                sequence: !input button2_dp
+              - conditions:
+                  - condition: template
+                    value_template: "{{ last_event_type == 'long_press' }}"
+                sequence: !input button2_lp
+
+      - conditions:
+          - condition: trigger
+            id: B3
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ last_event_type == 'single_press' }}"
+                sequence: !input button3_sp
+              - conditions:
+                  - condition: template
+                    value_template: "{{ last_event_type == 'double_press' }}"
+                sequence: !input button3_dp
+              - conditions:
+                  - condition: template
+                    value_template: "{{ last_event_type == 'long_press' }}"
+                sequence: !input button3_lp
+
+      - conditions:
+          - condition: trigger
+            id: B4
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ last_event_type == 'single_press' }}"
+                sequence: !input button4_sp
+              - conditions:
+                  - condition: template
+                    value_template: "{{ last_event_type == 'double_press' }}"
+                sequence: !input button4_dp
+              - conditions:
+                  - condition: template
+                    value_template: "{{ last_event_type == 'long_press' }}"
+                sequence: !input button4_lp
+
+      - conditions:
+          - condition: trigger
+            id: B5
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ last_event_type == 'single_press' }}"
+                sequence: !input button5_sp
+              - conditions:
+                  - condition: template
+                    value_template: "{{ last_event_type == 'double_press' }}"
+                sequence: !input button5_dp
+              - conditions:
+                  - condition: template
+                    value_template: "{{ last_event_type == 'long_press' }}"
+                sequence: !input button5_lp
