@@ -1,0 +1,47 @@
+type: custom:flex-table-card
+sort_by: state+
+clickable: true
+title: Prix du carburant E10
+entities:
+  include:
+    - sensor.station_*_e10
+  exclude: null
+max_rows: 20
+columns:
+  - data: entity_picture
+    name: " "
+    align: center
+    icon: mdi:gas-station
+    modify: "'<img src=\"' + x + '\"style=\"height: 35px\">'"
+  - attr: name
+    icon: mdi:map-search-outline
+    name: " "
+    align: left
+  - data: state
+    icon: mdi:currency-eur
+    suffix: €
+    name: " "
+    align: center
+  - attr: distance
+    icon: mdi:map-marker-distance
+    align: center
+    modify: Math.round(x)
+    suffix: " km"
+    name: " "
+  - icon: mdi:calendar-clock
+    name: " "
+    data: days_since_last_update
+    align: center
+    modify: |
+      if (x>=1) {'J+'+x} else {'Auj.'}
+css:
+  tbody tr:nth-child(odd): "background-color: rgba(255, 255, 255, 0.2)"
+  tbody tr:nth-child(even): "background-color: rgba(255, 255, 255, 0.1)"
+  tbody tr:nth-child(1): "color: #00C62D; font-weight: bold"
+  tbody tr:nth-child(2): "font-weight: normal"
+card_mod: null
+style: |
+  :host {
+    font-size: 14px;
+    border-radius: 10px;
+  }
