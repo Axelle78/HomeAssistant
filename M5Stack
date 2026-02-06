@@ -1,0 +1,1104 @@
+#include <M5Unified.h>
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
+
+// ===== CONFIGURATION - MODIFIEZ ICI =====
+const char* ssid = "####";
+const char* password = ""####";
+const char* mqtt_server = "####";
+const int mqtt_port = 1883;
+const char* mqtt_user = "mqtt";
+const char* mqtt_password = "####";
+const char* mqtt_client_id = "m5stack-core2";
+
+// =========================================
+
+WiFiClient espClient;
+PubSubClient mqtt(espClient);
+
+// Variables d'état
+int currentPage = 0;
+bool screenOn = true;
+unsigned long lastMsg = 0;
+unsigned long lastTouch = 0;
+unsigned long lastActivity = 0;
+unsigned long lastSensorPublish = 0;             // Dernière publication des capteurs
+unsigned long lastManualSleep = 0;               // Dernière extinction manuelle
+unsigned long lastWakeUp = 0;                    // Dernier rallumage (0 = jamais rallumé)
+const unsigned long SCREEN_TIMEOUT = 60000;      // 1 minute avant extinction écran
+const unsigned long SHUTDOWN_TIMEOUT = 300000;   // 5 minutes avant extinction complète
+const unsigned long WAKE_DELAY = 1000;           // Délai avant de pouvoir rallumer (1 sec)
+const unsigned long SLEEP_DELAY = 1000;          // Délai après rallumage avant de traiter les actions (1 sec)
+
+// Swipe gesture
+int touchStartX = 0;
+int touchStartY = 0;
+bool isSwiping = false;
+const int SWIPE_THRESHOLD = 80;
+
+// États des lumières
+bool light1_state = false;
+bool light2_state = false;
+
+// Routines Alexa
+bool routine_table_state = false;
+bool routine_vaisselle_state = false;
+bool routine_a_table_state = false;
+
+// Températures
+String temp1 = "--";
+String temp2 = "--";
+String temp3 = "--";
+String temp4 = "--";
+String temp1_name = "Salon";
+String temp2_name = "Dehors";
+String temp3_name = "Chambre";
+String temp4_name = "Terrasse";
+
+// Radiateurs
+String rad1_temp = "--";
+float rad1_target = 19.0;
+String rad1_state = "off";
+String rad1_name = "Salon";
+
+String rad2_temp = "--";
+float rad2_target = 19.0;
+String rad2_state = "off";
+String rad2_name = "Ch. Chloe";
+
+String rad3_temp = "--";
+float rad3_target = 19.0;
+String rad3_state = "off";
+String rad3_name = "Ch. Lucie";
+
+// Données énergétiques
+String cout_total = "--";
+String evol_cout = "--";
+String conso_total = "--";
+String evol_conso = "--";
+String production_total = "--";
+String evol_production = "--";
+
+// Infos système
+float batteryVoltage = 0;
+int batteryLevel = 0;
+int screenBrightness = 70;
+
+// Zones des boutons tactiles physiques (en bas de l'écran)
+const int BTN_Y_MIN = 240;
+const int BTN_Y_MAX = 320;
+const int BTN_LEFT_MAX = 106;
+const int BTN_MIDDLE_MIN = 107;
+const int BTN_MIDDLE_MAX = 213;
+const int BTN_RIGHT_MIN = 214;
+
+void setup() {
+  M5.Display.setSwapBytes(true);
+  Serial.begin(115200);
+  delay(1000);
+  Serial.println("\n=== Demarrage M5Stack Core2 ===");
+  
+  auto cfg = M5.config();
+  M5.begin(cfg);
+  
+  M5.Display.setBrightness(screenBrightness);
+  M5.Display.setRotation(1);
+  
+  setupWiFi();
+  
+  mqtt.setServer(mqtt_server, mqtt_port);
+  mqtt.setCallback(mqttCallback);
+  
+  lastActivity = millis();
+  
+  drawCurrentPage();
+  Serial.println("=== Setup termine ===");
+}
+
+void setupWiFi() {
+  Serial.print("Connexion WiFi...");
+  M5.Display.fillScreen(BLACK);
+  M5.Display.setTextSize(2);
+  M5.Display.setCursor(80, 100);
+  M5.Display.println("Connexion WiFi...");
+  
+  WiFi.begin(ssid, password);
+  
+  int attempts = 0;
+  while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+    delay(500);
+    Serial.print(".");
+    attempts++;
+  }
+  
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\nWiFi OK!");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println("\nWiFi ECHEC!");
+  }
+}
+
+void mqttCallback(char* topic, byte* payload, unsigned int length) {
+  String message;
+  for (int i = 0; i < length; i++) {
+    message += (char)payload[i];
+  }
+  
+  String topicStr = String(topic);
+  
+  StaticJsonDocument<512> doc;
+  DeserializationError error = deserializeJson(doc, message);
+  
+  if (!error) {
+    // Lumières
+    if (topicStr == "homeassistant/light/light1/state") {
+      light1_state = (doc["state"].as<String>() == "ON");
+      if (currentPage == 0 && screenOn) drawCurrentPage();
+    }
+    else if (topicStr == "homeassistant/light/light2/state") {
+      light2_state = (doc["state"].as<String>() == "ON");
+      if (currentPage == 0 && screenOn) drawCurrentPage();
+    }
+    // Routines Alexa (page 1)
+    else if (topicStr == "homeassistant/input_boolean/alexa_routine_la_table/state") {
+      routine_table_state = (doc["state"].as<String>() == "on");
+      if (currentPage == 1 && screenOn) drawCurrentPage();
+    }
+    else if (topicStr == "homeassistant/input_boolean/alexa_routine_la_vaisselle/state") {
+      routine_vaisselle_state = (doc["state"].as<String>() == "on");
+      if (currentPage == 1 && screenOn) drawCurrentPage();
+    }
+    else if (topicStr == "homeassistant/input_boolean/alexa_routine_a_table/state") {
+      routine_a_table_state = (doc["state"].as<String>() == "on");
+      if (currentPage == 1 && screenOn) drawCurrentPage();
+    }
+    // Températures (page 2, était page 1)
+    else if (topicStr == "homeassistant/sensor/temp1") {
+      temp1 = doc["state"].as<String>();
+      if (currentPage == 2 && screenOn) drawCurrentPage();
+    }
+    else if (topicStr == "homeassistant/sensor/temp2") {
+      temp2 = doc["state"].as<String>();
+      if (currentPage == 2 && screenOn) drawCurrentPage();
+    }
+    else if (topicStr == "homeassistant/sensor/temp3") {
+      temp3 = doc["state"].as<String>();
+      if (currentPage == 2 && screenOn) drawCurrentPage();
+    }
+    else if (topicStr == "homeassistant/sensor/temp4") {
+      temp4 = doc["state"].as<String>();
+      if (currentPage == 2 && screenOn) drawCurrentPage();
+    }
+    // Radiateurs (pages 4-6, étaient pages 3-5)
+    else if (topicStr == "homeassistant/climate/rad1/state") {
+      if (doc.containsKey("current_temperature")) {
+        rad1_temp = String(doc["current_temperature"].as<float>(), 1);
+      }
+      if (doc.containsKey("temperature")) {
+        rad1_target = doc["temperature"].as<float>();
+      }
+      if (doc.containsKey("hvac_action")) {
+        rad1_state = doc["hvac_action"].as<String>();
+      }
+      if (currentPage == 4 && screenOn) drawCurrentPage();
+    }
+    else if (topicStr == "homeassistant/climate/rad2/state") {
+      if (doc.containsKey("current_temperature")) {
+        rad2_temp = String(doc["current_temperature"].as<float>(), 1);
+      }
+      if (doc.containsKey("temperature")) {
+        rad2_target = doc["temperature"].as<float>();
+      }
+      if (doc.containsKey("hvac_action")) {
+        rad2_state = doc["hvac_action"].as<String>();
+      }
+      if (currentPage == 5 && screenOn) drawCurrentPage();
+    }
+    else if (topicStr == "homeassistant/climate/rad3/state") {
+      if (doc.containsKey("current_temperature")) {
+        rad3_temp = String(doc["current_temperature"].as<float>(), 1);
+      }
+      if (doc.containsKey("temperature")) {
+        rad3_target = doc["temperature"].as<float>();
+      }
+      if (doc.containsKey("hvac_action")) {
+        rad3_state = doc["hvac_action"].as<String>();
+      }
+      if (currentPage == 6 && screenOn) drawCurrentPage();
+    }
+    // Données énergétiques (pages 7-9, étaient pages 6-8)
+    else if (topicStr == "homeassistant/sensor/cout_total") {
+      cout_total = doc["state"].as<String>();
+      if (currentPage == 7 && screenOn) drawCurrentPage();
+    }
+    else if (topicStr == "homeassistant/sensor/evol_hier_cout") {
+      evol_cout = doc["state"].as<String>();
+      if (currentPage == 7 && screenOn) drawCurrentPage();
+    }
+    else if (topicStr == "homeassistant/sensor/conso_total") {
+      conso_total = doc["state"].as<String>();
+      if (currentPage == 8 && screenOn) drawCurrentPage();
+    }
+    else if (topicStr == "homeassistant/sensor/evol_hier_conso") {
+      evol_conso = doc["state"].as<String>();
+      if (currentPage == 8 && screenOn) drawCurrentPage();
+    }
+    else if (topicStr == "homeassistant/sensor/production_kwh") {
+      production_total = doc["state"].as<String>();
+      if (currentPage == 9 && screenOn) drawCurrentPage();
+    }
+    else if (topicStr == "homeassistant/sensor/evol_hier_production") {
+      evol_production = doc["state"].as<String>();
+      if (currentPage == 9 && screenOn) drawCurrentPage();
+    }
+  }
+}
+
+void reconnectMQTT() {
+  if (!mqtt.connected()) {
+    Serial.print("Connexion MQTT...");
+    if (mqtt.connect(mqtt_client_id, mqtt_user, mqtt_password)) {
+      Serial.println("OK!");
+      
+      mqtt.subscribe("homeassistant/light/light1/state");
+      mqtt.subscribe("homeassistant/light/light2/state");
+      mqtt.subscribe("homeassistant/input_boolean/alexa_routine_la_table/state");
+      mqtt.subscribe("homeassistant/input_boolean/alexa_routine_la_vaisselle/state");
+      mqtt.subscribe("homeassistant/input_boolean/alexa_routine_a_table/state");
+      mqtt.subscribe("homeassistant/sensor/temp1");
+      mqtt.subscribe("homeassistant/sensor/temp2");
+      mqtt.subscribe("homeassistant/sensor/temp3");
+      mqtt.subscribe("homeassistant/sensor/temp4");
+      mqtt.subscribe("homeassistant/climate/rad1/state");
+      mqtt.subscribe("homeassistant/climate/rad2/state");
+      mqtt.subscribe("homeassistant/climate/rad3/state");
+      mqtt.subscribe("homeassistant/sensor/cout_total");
+      mqtt.subscribe("homeassistant/sensor/evol_hier_cout");
+      mqtt.subscribe("homeassistant/sensor/conso_total");
+      mqtt.subscribe("homeassistant/sensor/evol_hier_conso");
+      mqtt.subscribe("homeassistant/sensor/production_kwh");
+      mqtt.subscribe("homeassistant/sensor/evol_hier_production");
+      
+      mqtt.publish("m5stack/state", "online");
+    } else {
+      Serial.print("Echec, rc=");
+      Serial.println(mqtt.state());
+    }
+  }
+}
+
+// ===== FONCTIONS DE DESSIN D'ICÔNES =====
+
+void drawLightBulbIcon(int x, int y, uint32_t color, bool isOn) {
+  // Ampoule
+  M5.Display.fillCircle(x, y, 12, color);
+  M5.Display.fillRect(x - 6, y + 8, 12, 8, color);
+  M5.Display.drawRect(x - 8, y + 16, 16, 4, color);
+  
+  // Lignes de lumière si allumée
+  if (isOn) {
+    M5.Display.drawLine(x - 18, y - 8, x - 22, y - 12, TFT_YELLOW);
+    M5.Display.drawLine(x + 18, y - 8, x + 22, y - 12, TFT_YELLOW);
+    M5.Display.drawLine(x - 20, y, x - 24, y, TFT_YELLOW);
+    M5.Display.drawLine(x + 20, y, x + 24, y, TFT_YELLOW);
+    M5.Display.drawLine(x - 14, y + 10, x - 18, y + 14, TFT_YELLOW);
+    M5.Display.drawLine(x + 14, y + 10, x + 18, y + 14, TFT_YELLOW);
+  }
+}
+
+void drawThermometerIcon(int x, int y, uint32_t color) {
+  // Tube
+  M5.Display.fillRect(x - 3, y - 15, 6, 20, color);
+  // Bulbe
+  M5.Display.fillCircle(x, y + 8, 6, color);
+  // Lignes de mesure
+  M5.Display.drawLine(x + 4, y - 12, x + 8, y - 12, WHITE);
+  M5.Display.drawLine(x + 4, y - 6, x + 8, y - 6, WHITE);
+  M5.Display.drawLine(x + 4, y, x + 8, y, WHITE);
+}
+
+void drawGearIcon(int x, int y, uint32_t color) {
+  // Engrenage simplifié
+  M5.Display.fillCircle(x, y, 10, color);
+  M5.Display.fillCircle(x, y, 6, BLACK);
+  // Dents
+  M5.Display.fillRect(x - 2, y - 14, 4, 6, color);
+  M5.Display.fillRect(x - 2, y + 8, 4, 6, color);
+  M5.Display.fillRect(x - 14, y - 2, 6, 4, color);
+  M5.Display.fillRect(x + 8, y - 2, 6, 4, color);
+}
+
+void drawRadiatorIcon(int x, int y, uint32_t color, bool isHeating) {
+  // Corps du radiateur
+  for (int i = 0; i < 4; i++) {
+    M5.Display.fillRoundRect(x - 12 + (i * 8), y - 10, 6, 20, 2, color);
+  }
+  
+  // Lignes de chaleur si en chauffe
+  if (isHeating) {
+    M5.Display.drawLine(x - 8, y - 16, x - 6, y - 20, TFT_ORANGE);
+    M5.Display.drawLine(x, y - 16, x + 2, y - 20, TFT_ORANGE);
+    M5.Display.drawLine(x + 8, y - 16, x + 10, y - 20, TFT_ORANGE);
+  }
+}
+
+void drawStatusBar() {
+  M5.Display.fillRect(0, 0, 320, 30, TFT_NAVY);
+  
+  // WiFi
+  if (WiFi.status() == WL_CONNECTED) {
+    M5.Display.fillRect(10, 18, 4, 8, TFT_GREEN);
+    M5.Display.fillRect(16, 14, 4, 12, TFT_GREEN);
+    M5.Display.fillRect(22, 10, 4, 16, TFT_GREEN);
+  } else {
+    M5.Display.drawLine(10, 10, 26, 26, TFT_RED);
+    M5.Display.drawLine(26, 10, 10, 26, TFT_RED);
+  }
+  
+  // Batterie
+  int batX = 260;
+  int batY = 8;
+  M5.Display.drawRect(batX, batY, 35, 16, WHITE);
+  M5.Display.fillRect(batX + 35, batY + 5, 3, 6, WHITE);
+  
+  // Couleur selon le niveau - DIRECTEMENT sans variable
+  int fillWidth = (batteryLevel * 31) / 100;
+  M5.Display.fillRect(batX + 2, batY + 2, fillWidth, 12, 
+    batteryLevel < 20 ? TFT_RED : (batteryLevel < 50 ? TFT_ORANGE : TFT_GREEN));
+  
+  M5.Display.setTextSize(1);
+  M5.Display.setTextColor(WHITE);
+  M5.Display.setCursor(batX - 30, batY + 4);
+  M5.Display.printf("%d%%", batteryLevel);
+  
+  // Indicateurs de page (petits points) - CENTRÉ - 10 pages (0-9)
+  int dotY = 20;
+  int startX = 110;
+  for (int i = 0; i < 10; i++) {
+    M5.Display.fillCircle(startX + i * 10, dotY, 3, (i == currentPage) ? TFT_ORANGE : TFT_DARKGREY);
+  }
+}
+
+// Barre de navigation en bas - indication visuelle discrète mais visible
+void drawNavigationBar() {
+  // Fond légèrement coloré pour la zone des boutons
+  M5.Display.fillRect(0, 238, 320, 22, TFT_DARKGREY);
+  
+  // Texte blanc pour les 3 boutons
+  M5.Display.setTextSize(1);
+  M5.Display.setTextColor(WHITE);
+  
+  // Bouton gauche
+  M5.Display.setCursor(30, 245);
+  M5.Display.print("< PREC");
+  
+  // Bouton milieu
+  M5.Display.setCursor(140, 245);
+  M5.Display.print("SLEEP");
+  
+  // Bouton droit
+  M5.Display.setCursor(265, 245);
+  M5.Display.print("SUIV >");
+}
+
+// ===== FONCTIONS DE DESSIN DES PAGES =====
+
+void drawLightsPage() {
+  M5.Display.fillScreen(BLACK);
+  drawStatusBar();
+  
+  // Titre
+  M5.Display.setTextSize(2);
+  M5.Display.setTextColor(WHITE);
+  M5.Display.setCursor(100, 35);
+  M5.Display.print("LUMIERES");
+  
+  // Zone Lumière 1 - Salon (utiliser TFT_YELLOW au lieu de COLOR_YELLOW_WARM)
+  M5.Display.fillRoundRect(10, 65, 140, 125, 15, light1_state ? TFT_YELLOW : TFT_DARKGREY);
+  drawLightBulbIcon(80, 105, BLACK, light1_state);
+  M5.Display.setTextSize(2);
+  M5.Display.setTextColor(BLACK);
+  M5.Display.setCursor(50, 150);
+  M5.Display.print("Salon");
+  M5.Display.setTextSize(1);
+  M5.Display.setCursor(40, 172);
+  M5.Display.print(light1_state ? "ALLUMEE" : "ETEINTE");
+  
+  // Zone Lumière 2 - Halogène (utiliser TFT_YELLOW au lieu de COLOR_YELLOW_WARM)
+  M5.Display.fillRoundRect(170, 65, 140, 125, 15, light2_state ? TFT_YELLOW : TFT_DARKGREY);
+  drawLightBulbIcon(240, 105, BLACK, light2_state);
+  M5.Display.setTextSize(2);
+  M5.Display.setTextColor(BLACK);
+  M5.Display.setCursor(190, 150);
+  M5.Display.print("Halogene");
+  M5.Display.setTextSize(1);
+  M5.Display.setCursor(195, 172);
+  M5.Display.print(light2_state ? "ALLUMEE" : "ETEINTE");
+  
+  drawNavigationBar();
+}
+
+// ===== PAGE ROUTINES ALEXA =====
+
+void drawRoutinesPage() {
+  M5.Display.fillScreen(BLACK);
+  drawStatusBar();
+  
+  // Titre
+  M5.Display.setTextSize(2);
+  M5.Display.setTextColor(WHITE);
+  M5.Display.setCursor(85, 35);
+  M5.Display.print("ROUTINES");
+  
+  // Design toggle switch - 3 lignes
+  int startY = 70;
+  int lineHeight = 55;
+  int toggleX = 200;  // Position X du toggle
+  int toggleW = 70;   // Largeur du toggle
+  int toggleH = 32;   // Hauteur du toggle
+  int circleR = 13;   // Rayon du cercle
+  
+  // === LIGNE 1 : La table ===
+  M5.Display.setTextSize(2);
+  M5.Display.setTextColor(WHITE);
+  M5.Display.setCursor(20, startY + 8);
+  M5.Display.print("La table");
+  
+  // Toggle switch
+  if (routine_table_state) {
+    // État ON : fond vert, cercle à droite
+    M5.Display.fillRoundRect(toggleX, startY, toggleW, toggleH, toggleH/2, TFT_GREEN);
+    M5.Display.fillCircle(toggleX + toggleW - circleR - 3, startY + toggleH/2, circleR, WHITE);
+  } else {
+    // État OFF : fond gris, cercle à gauche
+    M5.Display.fillRoundRect(toggleX, startY, toggleW, toggleH, toggleH/2, TFT_DARKGREY);
+    M5.Display.fillCircle(toggleX + circleR + 3, startY + toggleH/2, circleR, WHITE);
+  }
+  
+  // === LIGNE 2 : Lave vaisselle ===
+  M5.Display.setTextSize(2);
+  M5.Display.setTextColor(WHITE);
+  M5.Display.setCursor(20, startY + lineHeight + 8);
+  M5.Display.print("Vaisselle");
+  
+  // Toggle switch
+  int toggle2Y = startY + lineHeight;
+  if (routine_vaisselle_state) {
+    M5.Display.fillRoundRect(toggleX, toggle2Y, toggleW, toggleH, toggleH/2, TFT_GREEN);
+    M5.Display.fillCircle(toggleX + toggleW - circleR - 3, toggle2Y + toggleH/2, circleR, WHITE);
+  } else {
+    M5.Display.fillRoundRect(toggleX, toggle2Y, toggleW, toggleH, toggleH/2, TFT_DARKGREY);
+    M5.Display.fillCircle(toggleX + circleR + 3, toggle2Y + toggleH/2, circleR, WHITE);
+  }
+  
+  // === LIGNE 3 : A table ===
+  M5.Display.setTextSize(2);
+  M5.Display.setTextColor(WHITE);
+  M5.Display.setCursor(20, startY + lineHeight*2 + 8);
+  M5.Display.print("A table");
+  
+  // Toggle switch
+  int toggle3Y = startY + lineHeight*2;
+  if (routine_a_table_state) {
+    M5.Display.fillRoundRect(toggleX, toggle3Y, toggleW, toggleH, toggleH/2, TFT_GREEN);
+    M5.Display.fillCircle(toggleX + toggleW - circleR - 3, toggle3Y + toggleH/2, circleR, WHITE);
+  } else {
+    M5.Display.fillRoundRect(toggleX, toggle3Y, toggleW, toggleH, toggleH/2, TFT_DARKGREY);
+    M5.Display.fillCircle(toggleX + circleR + 3, toggle3Y + toggleH/2, circleR, WHITE);
+  }
+  
+  drawNavigationBar();
+}
+
+void drawTemperaturesPage() {
+  M5.Display.fillScreen(BLACK);
+  drawStatusBar();
+  
+  M5.Display.setTextSize(2);
+  M5.Display.setTextColor(WHITE);
+  M5.Display.setCursor(70, 35);
+  M5.Display.print("TEMPERATURES");
+  
+  // Grille 2x2
+  int startX = 20;
+  int startY = 65;
+  int boxW = 140;
+  int boxH = 60;
+  int spacing = 10;
+  
+  String temps[4] = {temp1, temp2, temp3, temp4};
+  String names[4] = {temp1_name, temp2_name, temp3_name, temp4_name};
+  
+  for (int i = 0; i < 4; i++) {
+    int x = startX + (i % 2) * (boxW + spacing);
+    int y = startY + (i / 2) * (boxH + spacing);
+    
+    M5.Display.fillRoundRect(x, y, boxW, boxH, 10, TFT_DARKGREY);
+    drawThermometerIcon(x + 20, y + 30, TFT_CYAN);
+    
+    M5.Display.setTextSize(1);
+    M5.Display.setTextColor(WHITE);
+    M5.Display.setCursor(x + 45, y + 12);
+    M5.Display.print(names[i]);
+    
+    M5.Display.setTextSize(3);
+    M5.Display.setCursor(x + 50, y + 30);
+    M5.Display.print(temps[i]);
+    M5.Display.setTextSize(2);
+    M5.Display.print("C");
+  }
+  
+  drawNavigationBar();
+}
+
+void drawSettingsPage() {
+  M5.Display.fillScreen(BLACK);
+  drawStatusBar();
+  
+  M5.Display.setTextSize(2);
+  M5.Display.setTextColor(WHITE);
+  M5.Display.setCursor(90, 35);
+  M5.Display.print("PARAMETRES");
+  
+  drawGearIcon(160, 70, TFT_CYAN);
+  
+  // Luminosité
+  M5.Display.setTextSize(2);
+  M5.Display.setCursor(30, 95);
+  M5.Display.print("Luminosite: ");
+  M5.Display.print((screenBrightness * 100) / 255);
+  M5.Display.print("%");
+  
+  // Barre de luminosité
+  M5.Display.fillRect(30, 120, 260, 20, TFT_DARKGREY);
+  int fillWidth = (screenBrightness * 260) / 255;
+  M5.Display.fillRect(30, 120, fillWidth, 20, TFT_CYAN);
+  
+  // Version et auto-extinction
+  M5.Display.setTextSize(1);
+  M5.Display.setTextColor(TFT_LIGHTGREY);
+  M5.Display.setCursor(30, 155);
+  M5.Display.print("Version: 2.5");
+  M5.Display.setCursor(30, 170);
+  M5.Display.print("Auto-extinction: 5 min");
+  
+  // Boutons +/-
+  M5.Display.fillRoundRect(40, 185, 100, 45, 10, TFT_BLUE);
+  M5.Display.setTextSize(3);
+  M5.Display.setTextColor(WHITE);
+  M5.Display.setCursor(75, 198);
+  M5.Display.print("-");
+  
+  M5.Display.fillRoundRect(180, 185, 100, 45, 10, TFT_RED);
+  M5.Display.setCursor(215, 198);
+  M5.Display.print("+");
+  
+  drawNavigationBar();
+}
+
+void drawRadiatorPage(String name, String currentTemp, float target, String state) {
+  M5.Display.fillScreen(BLACK);
+  drawStatusBar();
+  
+  // Titre
+  M5.Display.setTextSize(2);
+  M5.Display.setTextColor(WHITE);
+  M5.Display.setCursor(100, 35);
+  M5.Display.print("RADIATEUR");
+  
+  // Nom
+  M5.Display.setTextSize(2);
+  M5.Display.setCursor(120, 55);
+  M5.Display.print(name);
+  
+  // Icône radiateur
+  drawRadiatorIcon(50, 110, TFT_LIGHTGREY, state == "heating");
+  
+  // Température actuelle
+  M5.Display.setTextSize(2);
+  M5.Display.setCursor(85, 95);
+  M5.Display.print("Actuelle: ");
+  M5.Display.setTextSize(3);
+  M5.Display.print(currentTemp);
+  M5.Display.setTextSize(2);
+  M5.Display.print("C");
+  
+  // État
+  M5.Display.setTextSize(2);
+  M5.Display.setCursor(85, 125);
+  String displayState = "OFF";
+  
+  if (state == "heating") {
+    displayState = "CHAUFFE";
+  } else if (state == "idle") {
+    displayState = "VEILLE";
+  } else if (state == "off") {
+    displayState = "OFF";
+  }
+  
+  // Couleur directe selon l'état
+  M5.Display.setTextColor(state == "heating" ? TFT_ORANGE : (state == "idle" ? TFT_BLUE : TFT_DARKGREY));
+  M5.Display.print(displayState);
+  M5.Display.setTextColor(WHITE);
+  
+  // Consigne
+  M5.Display.setTextSize(2);
+  M5.Display.setCursor(50, 155);
+  M5.Display.print("Consigne: ");
+  M5.Display.setTextSize(3);
+  M5.Display.printf("%.1f", target);
+  M5.Display.setTextSize(2);
+  M5.Display.print("C");
+  
+  // Boutons +/-
+  M5.Display.fillRoundRect(40, 185, 100, 45, 10, TFT_BLUE);
+  M5.Display.setTextSize(4);
+  M5.Display.setTextColor(WHITE);
+  M5.Display.setCursor(75, 193);
+  M5.Display.print("-");
+  
+  M5.Display.fillRoundRect(180, 185, 100, 45, 10, TFT_RED);
+  M5.Display.setCursor(215, 193);
+  M5.Display.print("+");
+  
+  drawNavigationBar();
+}
+
+// ===== PAGES ÉNERGÉTIQUES =====
+
+void drawEnergyPage(String title, String value, String unit, String evolution, bool inverseLogic = false) {
+  M5.Display.fillScreen(BLACK);
+  
+  // TEST: On ne dessine PAS la barre de statut pour voir si c'est elle qui cause le problème
+  drawStatusBar();  // REMIS
+  
+  // Debug dans le Serial Monitor
+  Serial.print("Page ");
+  Serial.print(title);
+  Serial.print(" - Valeur: ");
+  Serial.print(value);
+  Serial.print(" - Evolution: ");
+  Serial.println(evolution);
+  
+  // Gérer les valeurs manquantes
+  if (value == "--" || evolution == "--") {
+    // Si pas de données, afficher en gris
+    M5.Display.fillRect(15, 50, 290, 140, TFT_DARKGREY);
+    
+    M5.Display.setTextSize(2);
+    M5.Display.setTextColor(WHITE);
+    M5.Display.setCursor(160 - (title.length() * 6), 70);
+    M5.Display.print(title);
+    
+    M5.Display.setTextSize(2);
+    M5.Display.setCursor(90, 110);
+    M5.Display.print("En attente...");
+    
+    drawNavigationBar();
+    return;
+  }
+  
+  // Déterminer la couleur selon l'évolution
+  float evolValue = evolution.toFloat();
+  
+  Serial.print("Evolution (float): ");
+  Serial.println(evolValue);
+  
+  // Pour la couleur : inverseLogic = true pour coûts/conso (hausse=mauvais), false pour production (hausse=bon)
+  bool isGood = inverseLogic ? (evolValue < 0) : (evolValue > 0);
+  
+  Serial.print("isGood: ");
+  Serial.println(isGood ? "OUI" : "NON");
+  
+  Serial.print("Couleur logique: ");
+  Serial.println(isGood ? "VERT" : "ROUGE");
+  
+  // Pour la flèche : toujours basée sur le signe de l'évolution
+  String arrow = (evolValue >= 0) ? "^" : "v";
+  
+  // SOLUTION: Utiliser les couleurs DIRECTEMENT sans variable intermédiaire
+  // Dessiner EXACTEMENT comme la page de test - avec fillRect
+  // Bordure colorée (cadre extérieur) - couleur DIRECTE
+  M5.Display.fillRect(15, 50, 290, 140, isGood ? TFT_GREEN : TFT_RED);
+  // Fond gris par dessus (laisse 3px de bordure)
+  M5.Display.fillRect(18, 53, 284, 134, TFT_DARKGREY);
+  
+  // Titre
+  M5.Display.setTextSize(2);
+  M5.Display.setTextColor(WHITE);
+  M5.Display.setCursor(160 - (title.length() * 6), 70);
+  M5.Display.print(title);
+  
+  // Valeur principale
+  M5.Display.setTextSize(3);
+  String displayValue = value + " " + unit;
+  M5.Display.setCursor(160 - (displayValue.length() * 9), 100);
+  M5.Display.print(displayValue);
+  
+  // Ligne de séparation
+  M5.Display.fillRect(80, 130, 160, 1, TFT_LIGHTGREY);
+  
+  // Évolution avec flèche - couleur DIRECTE aussi
+  M5.Display.setTextSize(2);
+  M5.Display.setTextColor(isGood ? TFT_GREEN : TFT_RED);  // Couleur DIRECTE
+  String evolText = arrow + " " + evolution + "%";
+  M5.Display.setCursor(160 - (evolText.length() * 6), 145);
+  M5.Display.print(evolText);
+  
+  drawNavigationBar();  // REMIS
+}
+
+void drawCoutsPage() {
+  drawEnergyPage("Couts", cout_total, "EUR", evol_cout, true);
+}
+
+void drawConsoPage() {
+  drawEnergyPage("Conso", conso_total, "kWh", evol_conso, true);
+}
+
+void drawProductionPage() {
+  drawEnergyPage("Production", production_total, "kWh", evol_production, false);
+}
+
+void drawCurrentPage() {
+  switch(currentPage) {
+    case 0: drawLightsPage(); break;
+    case 1: drawRoutinesPage(); break;  // NOUVELLE PAGE
+    case 2: drawTemperaturesPage(); break;
+    case 3: drawSettingsPage(); break;
+    case 4: drawRadiatorPage(rad1_name, rad1_temp, rad1_target, rad1_state); break;
+    case 5: drawRadiatorPage(rad2_name, rad2_temp, rad2_target, rad2_state); break;
+    case 6: drawRadiatorPage(rad3_name, rad3_temp, rad3_target, rad3_state); break;
+    case 7: drawCoutsPage(); break;
+    case 8: drawConsoPage(); break;
+    case 9: drawProductionPage(); break;
+  }
+}
+
+void handleTouch() {
+  if (M5.Touch.getCount()) {
+    auto t = M5.Touch.getDetail();
+    
+    // Si l'écran est éteint, on gère UNIQUEMENT le rallumage
+    if (!screenOn) {
+      // Ne rallumer que si assez de temps s'est écoulé depuis l'extinction manuelle
+      if (millis() - lastManualSleep > WAKE_DELAY) {
+        screenOn = true;
+        M5.Display.setBrightness(screenBrightness);
+        lastActivity = millis();
+        lastWakeUp = millis();  // Enregistrer le moment du rallumage
+        drawCurrentPage();
+      }
+      // IMPORTANT : Toujours return ici, même si on n'a pas rallumé
+      // pour éviter de traiter le touch comme une action sur une page
+      return;
+    }
+    
+    // Mettre à jour l'activité seulement si l'écran est allumé
+    lastActivity = millis();
+    
+    // Ignorer tous les événements tactiles pendant 1 seconde après le rallumage
+    // pour éviter d'activer des boutons par accident (sauf au premier démarrage)
+    if (lastWakeUp > 0 && millis() - lastWakeUp < SLEEP_DELAY) {
+      return;
+    }
+    
+    // Détection du début du swipe
+    if (t.wasPressed()) {
+      touchStartX = t.x;
+      touchStartY = t.y;
+      isSwiping = false;
+    }
+    
+    // Détection du swipe en cours
+    if (t.isPressed()) {
+      int deltaX = t.x - touchStartX;
+      int deltaY = abs(t.y - touchStartY);
+      
+      if (abs(deltaX) > 30 && deltaY < 50) {
+        isSwiping = true;
+      }
+    }
+    
+    // Fin du swipe
+    if (t.wasReleased() && isSwiping) {
+      int deltaX = t.x - touchStartX;
+      
+      if (abs(deltaX) > SWIPE_THRESHOLD) {
+        if (deltaX > 0) {
+          // Swipe droite = page précédente
+          currentPage--;
+          if (currentPage < 0) currentPage = 9;
+        } else {
+          // Swipe gauche = page suivante
+          currentPage++;
+          if (currentPage > 9) currentPage = 0;
+        }
+        
+        Serial.printf("Swipe! Page: %d\n", currentPage);
+        drawCurrentPage();
+        isSwiping = false;
+        return;
+      }
+    }
+    
+    // Si pas de swipe, gérer les touches normales
+    if (!isSwiping && t.wasReleased()) {
+      if (millis() - lastTouch < 300) return;
+      lastTouch = millis();
+      
+      // Boutons physiques
+      if (t.y >= BTN_Y_MIN && t.y <= BTN_Y_MAX) {
+        if (t.x <= BTN_LEFT_MAX) {
+          currentPage--;
+          if (currentPage < 0) currentPage = 9;
+          drawCurrentPage();
+          return;
+        }
+        else if (t.x >= BTN_MIDDLE_MIN && t.x <= BTN_MIDDLE_MAX) {
+          screenOn = false;
+          lastManualSleep = millis();  // Enregistrer le moment de l'extinction
+          M5.Display.setBrightness(0);
+          M5.Display.fillScreen(BLACK);
+          return;
+        }
+        else if (t.x >= BTN_RIGHT_MIN) {
+          currentPage++;
+          if (currentPage > 9) currentPage = 0;
+          drawCurrentPage();
+          return;
+        }
+      }
+      
+      // PAGE 0 : Lumières
+      if (currentPage == 0 && t.y >= 65 && t.y <= 190) {
+        if (t.x <= 160) {
+          light1_state = !light1_state;
+          String payload = light1_state ? "{\"state\":\"ON\"}" : "{\"state\":\"OFF\"}";
+          mqtt.publish("homeassistant/light/light1/set", payload.c_str());
+          drawCurrentPage();
+        } else {
+          light2_state = !light2_state;
+          String payload = light2_state ? "{\"state\":\"ON\"}" : "{\"state\":\"OFF\"}";
+          mqtt.publish("homeassistant/light/light2/set", payload.c_str());
+          drawCurrentPage();
+        }
+      }
+      
+      // PAGE 1 : Routines Alexa (design toggle vertical)
+      if (currentPage == 1) {
+        // Ligne 1 : La table (toute la ligne est cliquable)
+        if (t.y >= 70 && t.y <= 105) {
+          routine_table_state = !routine_table_state;
+          String payload = routine_table_state ? "{\"state\":\"on\"}" : "{\"state\":\"off\"}";
+          mqtt.publish("homeassistant/input_boolean/alexa_routine_la_table/set", payload.c_str());
+          drawCurrentPage();
+        }
+        // Ligne 2 : Lave vaisselle
+        else if (t.y >= 115 && t.y <= 160) {
+          routine_vaisselle_state = !routine_vaisselle_state;
+          String payload = routine_vaisselle_state ? "{\"state\":\"on\"}" : "{\"state\":\"off\"}";
+          mqtt.publish("homeassistant/input_boolean/alexa_routine_la_vaisselle/set", payload.c_str());
+          drawCurrentPage();
+        }
+        // Ligne 3 : A table
+        else if (t.y >= 170 && t.y <= 215) {
+          routine_a_table_state = !routine_a_table_state;
+          String payload = routine_a_table_state ? "{\"state\":\"on\"}" : "{\"state\":\"off\"}";
+          mqtt.publish("homeassistant/input_boolean/alexa_routine_a_table/set", payload.c_str());
+          drawCurrentPage();
+        }
+      }
+      
+      // PAGE 3 : Paramètres (était page 2)
+      if (currentPage == 3) {
+        if (t.x >= 40 && t.x <= 140 && t.y >= 185 && t.y <= 230) {
+          screenBrightness -= 25;
+          if (screenBrightness < 25) screenBrightness = 25;
+          M5.Display.setBrightness(screenBrightness);
+          drawCurrentPage();
+        }
+        else if (t.x >= 180 && t.x <= 280 && t.y >= 185 && t.y <= 230) {
+          screenBrightness += 25;
+          if (screenBrightness > 255) screenBrightness = 255;
+          M5.Display.setBrightness(screenBrightness);
+          drawCurrentPage();
+        }
+        else if (t.x >= 30 && t.x <= 290 && t.y >= 120 && t.y <= 140) {
+          screenBrightness = ((t.x - 30) * 255) / 260;
+          if (screenBrightness < 25) screenBrightness = 25;
+          if (screenBrightness > 255) screenBrightness = 255;
+          M5.Display.setBrightness(screenBrightness);
+          drawCurrentPage();
+        }
+      }
+      
+      // PAGES 4-6 : Radiateurs (étaient pages 3-5)
+      if (currentPage >= 4 && currentPage <= 6) {
+        if (t.x >= 40 && t.x <= 140 && t.y >= 185 && t.y <= 230) {
+          float* target = (currentPage == 4) ? &rad1_target : (currentPage == 5) ? &rad2_target : &rad3_target;
+          *target -= 0.5;
+          if (*target < 7.0) *target = 7.0;
+          
+          StaticJsonDocument<200> doc;
+          doc["temperature"] = *target;
+          char buffer[200];
+          serializeJson(doc, buffer);
+          
+          char topic[50];
+          sprintf(topic, "homeassistant/climate/rad%d/set", currentPage - 3);
+          mqtt.publish(topic, buffer);
+          
+          drawCurrentPage();
+        }
+        else if (t.x >= 180 && t.x <= 280 && t.y >= 185 && t.y <= 230) {
+          float* target = (currentPage == 4) ? &rad1_target : (currentPage == 5) ? &rad2_target : &rad3_target;
+          *target += 0.5;
+          if (*target > 30.0) *target = 30.0;
+          
+          StaticJsonDocument<200> doc;
+          doc["temperature"] = *target;
+          char buffer[200];
+          serializeJson(doc, buffer);
+          
+          char topic[50];
+          sprintf(topic, "homeassistant/climate/rad%d/set", currentPage - 3);
+          mqtt.publish(topic, buffer);
+          
+          drawCurrentPage();
+        }
+      }
+    }
+  }
+}
+
+// ===== PUBLICATION DES CAPTEURS =====
+
+void publishSensors() {
+  if (!mqtt.connected()) return;
+  
+  StaticJsonDocument<256> doc;
+  char buffer[256];
+  
+  // 1. Batterie (niveau en %) - met à jour la variable globale pour l'affichage
+  batteryLevel = M5.Power.getBatteryLevel();
+  doc["battery"] = batteryLevel;
+  serializeJson(doc, buffer);
+  mqtt.publish("homeassistant/sensor/m5stack/battery", buffer);
+  
+  // 2. WiFi RSSI (force du signal)
+  doc.clear();
+  doc["rssi"] = WiFi.RSSI();
+  serializeJson(doc, buffer);
+  mqtt.publish("homeassistant/sensor/m5stack/rssi", buffer);
+  
+  // 3. Uptime (en minutes)
+  doc.clear();
+  unsigned long uptimeMinutes = millis() / 60000;
+  doc["uptime"] = uptimeMinutes;
+  serializeJson(doc, buffer);
+  mqtt.publish("homeassistant/sensor/m5stack/uptime", buffer);
+  
+  // 4. Mémoire libre (en KB)
+  doc.clear();
+  doc["free_heap"] = ESP.getFreeHeap() / 1024;
+  serializeJson(doc, buffer);
+  mqtt.publish("homeassistant/sensor/m5stack/free_heap", buffer);
+  
+  // 5. IMU - Accéléromètre (si présent)
+  auto imu_update = M5.Imu.update();
+  if (imu_update) {
+    auto data = M5.Imu.getImuData();
+    
+    // Accélération
+    doc.clear();
+    doc["accel_x"] = round(data.accel.x * 100) / 100.0;
+    doc["accel_y"] = round(data.accel.y * 100) / 100.0;
+    doc["accel_z"] = round(data.accel.z * 100) / 100.0;
+    serializeJson(doc, buffer);
+    mqtt.publish("homeassistant/sensor/m5stack/accelerometer", buffer);
+    
+    // Gyroscope
+    doc.clear();
+    doc["gyro_x"] = round(data.gyro.x * 100) / 100.0;
+    doc["gyro_y"] = round(data.gyro.y * 100) / 100.0;
+    doc["gyro_z"] = round(data.gyro.z * 100) / 100.0;
+    serializeJson(doc, buffer);
+    mqtt.publish("homeassistant/sensor/m5stack/gyroscope", buffer);
+  }
+  
+  Serial.println("Capteurs publiés sur MQTT");
+}
+
+void loop() {
+  M5.update();
+  
+  // Extinction manuelle par bouton power
+  if (M5.BtnPWR.wasPressed()) {
+    Serial.println("Extinction manuelle...");
+    mqtt.publish("m5stack/state", "offline");
+    delay(100);
+    M5.Display.setBrightness(0);
+    M5.Display.fillScreen(BLACK);
+    M5.Power.setLed(0);
+    M5.Power.powerOff();
+  }
+  
+  // Extinction de l'écran après 1 minute
+  if (screenOn && (millis() - lastActivity > SCREEN_TIMEOUT)) {
+    Serial.println("Extinction ecran (timeout)");
+    screenOn = false;
+    lastManualSleep = millis();  // Enregistrer pour éviter rallumage immédiat
+    M5.Display.setBrightness(0);
+    M5.Display.fillScreen(BLACK);
+  }
+  
+  // Extinction complète après 5 minutes d'inactivité
+  if (millis() - lastActivity > SHUTDOWN_TIMEOUT) {
+    Serial.println("Extinction automatique apres 5 minutes...");
+    mqtt.publish("m5stack/state", "offline_auto");
+    delay(100);
+    M5.Display.setBrightness(0);
+    M5.Display.fillScreen(BLACK);
+    M5.Power.setLed(0);
+    M5.Power.powerOff();
+  }
+  
+  // Gestion LED
+  if (screenOn) {
+    M5.Power.setLed(128);
+  } else {
+    M5.Power.setLed(0);
+  }
+  
+  // Connexion MQTT
+  if (!mqtt.connected()) {
+    reconnectMQTT();
+  }
+  mqtt.loop();
+  
+  // Mise à jour de la batterie pour l'affichage (toutes les 5 secondes)
+  unsigned long now = millis();
+  if (now - lastMsg > 5000) {
+    lastMsg = now;
+    batteryLevel = M5.Power.getBatteryLevel();
+    batteryVoltage = M5.Power.getBatteryVoltage() / 1000.0;
+    
+    // Rafraîchir la barre de statut si l'écran est allumé
+    if (screenOn) {
+      drawStatusBar();
+    }
+  }
+  
+  // Envoi de tous les capteurs toutes les 30 secondes
+  if (now - lastSensorPublish > 30000) {
+    lastSensorPublish = now;
+    publishSensors();
+  }
+  
+  handleTouch();
+  
+  delay(50);
+}
