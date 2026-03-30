@@ -1,0 +1,118 @@
+type: horizontal-stack
+cards:
+  - type: custom:mushroom-climate-card
+    entity: climate.chauffage_chambre_lucie
+    fill_container: true
+    show_temperature_control: true
+    collapsible_controls: true
+    hvac_modes:
+      - heat
+      - "off"
+    name: Lucie
+    primary_info: name
+    secondary_info: state
+    icon: mdi:radiator
+    card_mod:
+      style:
+        mushroom-state-info$: >
+          .container {
+           --card-secondary-font-size: 16px;
+           --card-primary-font-size: 18px;
+          } .container:after { {% set reelle =
+          state_attr('climate.chauffage_chambre_lucie', 'temperature') |
+          float(0) %} {% set theo = states('sensor.consigne_actuelle_lucie') |
+          float(0) %} {% set gain =
+          states('sensor.chauffage_reduction_de_consigne_chambres') | float(0)
+          %} {% set delta = (reelle - theo) | abs %}
+
+          {# Logique Mode École avec décalage -1h #} {% set debut =
+          states('sensor.debut_des_cours_de_lucie_aujourd_hui') %} {% set fin =
+          states('sensor.fin_des_cours_de_lucie_aujourd_hui') %} {% set ecole =
+          false %} {% if debut not in ['unknown', 'unavailable', 'Pas cours']
+          and fin not in ['unknown', 'unavailable', 'Pas cours'] %}
+            {% set debut_dt = today_at(debut) - timedelta(hours=1) %}
+            {% set fin_dt = today_at(fin) - timedelta(hours=1) %}
+            {% set ecole = debut_dt <= now() <= fin_dt %}
+          {% endif %}
+
+          {% if states('climate.chauffage_chambre_lucie') == 'off' %}
+            content: "Éteint";
+            display: block;
+            color: #9e9e9e;
+            font-size: 14px;
+            margin-top: 4px;
+          {% elif delta > 0.1 %}
+            content: "Mode Manuel";
+            display: block;
+            color: #FFD6A1;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 4px;
+          {% elif ecole %}
+            content: "Mode École 📚";
+            display: block;
+            color: #A1C4FD;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 4px;
+          {% elif states('input_boolean.cheminee')=="on" %}
+            content: "Mode Cheminée (-{{ (gain + states('input_number.adaptation_consigne_cheminee') | float(0)) | abs }}°C)";
+            display: block;
+            color: #FFCAB3;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 4px;
+          {% elif gain > 0 %}
+            content: "Mode Programme Éco (-{{ gain }}°C)";
+            display: block;
+            color: #B9FAD8;
+            font-size: 14px;
+            margin-top: 4px;
+          {% else %}
+            content: "Mode Programme";
+            display: block;
+            color: #FFFFFF;
+            font-size: 14px;
+            margin-top: 4px;
+          {% endif %} }
+        .: |
+          ha-card {
+            border-radius: 15px;
+            background: rgba(45, 45, 55, 0.8) !important;
+            transition: all 0.5s ease;
+            {% set hvac_state = states('climate.chauffage_chambre_lucie') %}
+            {% set action = state_attr('climate.chauffage_chambre_lucie','hvac_action') %}
+            {% if hvac_state == 'off' %}
+              border: 1px solid rgba(255, 255, 255, 0.1) !important;
+              box-shadow: none !important;
+            {% elif action == 'heating' %}
+              box-shadow: 0px 0px 22px 2px rgba(255, 69, 0, 0.8) !important;
+              border: 1px solid rgba(255, 69, 0, 0.6) !important;
+            {% elif action == 'idle' %}
+              box-shadow: 0px 0px 22px 2px rgba(48, 79, 252, 0.7) !important;
+              border: 1px solid rgba(48, 79, 252, 0.6) !important;
+            {% else %}
+              border: 1px solid rgba(255, 255, 255, 0.1) !important;
+              box-shadow: none !important;
+            {% endif %}
+          }
+          mushroom-shape-icon {
+            {% set hvac_state = states('climate.chauffage_chambre_lucie') %}
+            {% set action = state_attr('climate.chauffage_chambre_lucie', 'hvac_action') %}
+            {% if hvac_state == 'off' %}
+              --icon-color: #9e9e9e !important;
+              --shape-color: rgba(158, 158, 158, 0.1) !important;
+            {% elif action == 'heating' %}
+              --icon-color: #ff4500 !important;
+              --shape-color: rgba(255, 69, 0, 0.2) !important;
+            {% elif action == 'idle' %}
+              --icon-color: #4885ed !important;
+              --shape-color: rgba(72, 133, 237, 0.2) !important;
+            {% else %}
+              --icon-color: #9e9e9e !important;
+              --shape-color: rgba(158, 158, 158, 0.1) !important;
+            {% endif %}
+          }
+grid_options:
+  columns: 8
+  rows: 3
